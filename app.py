@@ -6,12 +6,12 @@ import threading
 import subprocess
 import json
 import urllib.request
-from flask import Flask, request, render_template, g, make_response
+from flask import Flask, request, render_template, g, make_response, jsonify
 
 app = Flask(__name__)
 DB_PATH = r"D:\link_studey\analytics.db"
 
-# Global placeholder variable - automatically updated dynamically on engine boot
+# Auto-populated dynamically on engine boot
 PUBLIC_DOMAIN = "Retrieving global address..."
 
 def get_db():
@@ -36,8 +36,7 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 original_url TEXT NOT NULL,
                 tracker_code TEXT UNIQUE NOT NULL,
-                platform TEXT NOT NULL,
-                total_clicks INTEGER DEFAULT 0
+                platform TEXT NOT NULL
             )
         ''')
         cursor.execute('''
@@ -71,11 +70,6 @@ def detect_visitor_platform():
     elif 'macintosh' in user_agent: return 'MacOS Desktop'
     return 'Other Web Source'
 
-@app.after_request
-def clear_ngrok_interstitials(response):
-    response.headers["ngrok-skip-browser-warning"] = "true"
-    return response
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     db = get_db()
@@ -96,27 +90,62 @@ def index():
         except sqlite3.IntegrityError:
             message = "Error: This Custom Identifier Phrase is already in use."
 
-    links = db.execute('SELECT * FROM universal_links ORDER BY id DESC').fetchall()
+    raw_links = db.execute('SELECT * FROM universal_links ORDER BY id DESC').fetchall()
+    links = []
     
-    platform_summary = db.execute('''
+    for row in raw_links:
+        link_id = row['id']
+        # 1 Device = 1 Hit (Counting distinct IPs)
+        unique_devices = db.execute(
+            'SELECT COUNT(DISTINCT ip_address) as count FROM tracking_history WHERE link_id = ?', (link_id,)
+        ).fetchone()['count']
+        
+        # Total overall clicks
+        total_clicks = db.execute(
+            'SELECT COUNT(*) as count FROM tracking_history WHERE link_id = ?', (link_id,)
+        ).fetchone()['count']
+        
+        links.append({
+            'id': row['id'],
+            'original_url': row['original_url'],
+            'tracker_code': row['tracker_code'],
+            'platform': row['platform'],
+            'unique_devices': unique_devices,
+            'total_clicks': total_clicks
+        })
+        
+    return render_template('index.html', message=message, links=links, domain=PUBLIC_DOMAIN)
+
+# --- API ENDPOINT FOR ON-DEMAND MODAL POPUP ---
+@app.route('/api/analysis/<int:link_id>')
+def link_analysis(link_id):
+    db = get_db()
+    
+    # Platform breakdown for the link-wise pie chart
+    chart_rows = db.execute('''
         SELECT detected_platform, COUNT(*) as count 
-        FROM tracking_history 
-        GROUP BY detected_platform
-    ''').fetchall()
+        FROM tracking_history WHERE link_id = ? GROUP BY detected_platform
+    ''', (link_id,)).fetchall()
     
-    labels = [row['detected_platform'] for row in platform_summary]
-    counts = [row['count'] for row in platform_summary]
+    labels = [r['detected_platform'] for r in chart_rows]
+    counts = [r['count'] for r in chart_rows]
     
-    history = db.execute('''
-        SELECT u.tracker_code, h.detected_platform, h.ip_address, h.clicked_at 
-        FROM tracking_history h 
-        JOIN universal_links u ON h.link_id = u.id 
-        ORDER BY h.clicked_at DESC LIMIT 100
-    ''').fetchall()
+    # Device details and repeated hits
+    device_rows = db.execute('''
+        SELECT detected_platform, ip_address, COUNT(*) as click_count 
+        FROM tracking_history WHERE link_id = ? 
+        GROUP BY ip_address ORDER BY click_count DESC
+    ''', (link_id,)).fetchall()
+    
+    devices = [dict(r) for r in device_rows]
+    
+    return jsonify({
+        'labels': labels,
+        'counts': counts,
+        'devices': devices
+    })
 
-    return render_template('index.html', message=message, links=links, labels=labels, counts=counts, history=history, domain=PUBLIC_DOMAIN)
-
-# --- CRITICAL FIX: ZERO-DISTRACTION AUTOMATED REDIRECT INTERACTION LAYER ---
+# --- INSTANT ZERO-DISTRACTION REDIRECT ---
 @app.route('/click/<tracker_code>')
 def inbound_tracker(tracker_code):
     db = get_db()
@@ -128,29 +157,29 @@ def inbound_tracker(tracker_code):
         
         db.execute('INSERT INTO tracking_history (link_id, detected_platform, ip_address) VALUES (?, ?, ?)',
                    (link['id'], click_source, visitor_ip))
-        db.execute('UPDATE universal_links SET total_clicks = total_clicks + 1 WHERE id = ?', (link['id'],))
         db.commit()
         
-        # We serve a seamless client-side landing frame that programmatically strips out the ngrok verification block
+        # Client-side script to bypass the ngrok warning instantly
         html_bypass = f'''
         <!DOCTYPE html>
         <html>
         <head>
             <title>Loading...</title>
             <script>
-                // Instantly inject the skip header to the browser session cache context natively
-                fetch(window.location.href, {{
-                    method: "GET",
-                    headers: {{ "ngrok-skip-browser-warning": "true" }}
-                }}).then(() => {{
+                try {{
+                    fetch(window.location.href, {{
+                        method: "GET",
+                        headers: {{ "ngrok-skip-browser-warning": "true" }}
+                    }}).finally(() => {{
+                        window.location.replace("{link['original_url']}");
+                    }});
+                }} catch(e) {{
                     window.location.replace("{link['original_url']}");
-                }}).catch(() => {{
-                    window.location.replace("{link['original_url']}");
-                }});
+                }}
             </script>
         </head>
         <body style="background:#f4f6f9; font-family:sans-serif; text-align:center; padding-top:15%;">
-            <h3>Processing Secure Connection...</h3>
+            <h3>Connecting securely...</h3>
         </body>
         </html>
         '''
@@ -158,31 +187,29 @@ def inbound_tracker(tracker_code):
         resp.headers["ngrok-skip-browser-warning"] = "true"
         return resp
     
-    return "Tracking endpoint invalid.", 404
+    return "Tracking link invalid.", 404
 
-# --- REQUIREMENT #4 & #7: CLEAN AUTOMATED TUNNEL PIPELINE ---
+# --- ERROR-FREE TUNNEL AUTOMATION ---
 def run_native_tunnel_automation():
     global PUBLIC_DOMAIN
     token = "SHLINK_API_KEY_REMOVED"
     
-    time.sleep(2)  # Allow Flask server to bind to port 5800 first
+    time.sleep(2)
     print("[~] Initializing Native Automated Public Tunnel Pipeline...")
     
-    # 1. Cleanly write the authtoken to your local server config file location
-    subprocess.run(r'D:\link_studey\ngrok.exe config add-authtoken ' + token, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Store token using explicit list arguments to avoid shell parsing errors
+    subprocess.run([r"D:\link_studey\ngrok.exe", "config", "add-authtoken", token], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     
-    # 2. Start a clean HTTP tunnel on local port 5800 with zero appended typo strings
-    subprocess.Popen(r'D:\link_studey\ngrok.exe http 5800', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    time.sleep(4)  # Give the connection handshake a moment to link up
+    # Start HTTP tunnel explicitly on port 5800
+    subprocess.Popen([r"D:\link_studey\ngrok.exe", "http", "5800"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(4)
     
-    # 3. Pull the live generated link from the local background process api port
     try:
         req = urllib.request.Request("http://127.0.0.1:4040/api/tunnels", headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req) as response:
             data = json.loads(response.read().decode())
             public_url = data['tunnels'][0]['public_url']
             PUBLIC_DOMAIN = public_url.replace("http://", "https://")
-            
             print("\n" + "="*60)
             print(f"[✔] PORTAL HAS SELF-GENERATED THE GLOBAL LINK:")
             print(f"    {PUBLIC_DOMAIN}")
@@ -220,7 +247,7 @@ def run_server_precheck():
                 sys.exit(1)
     print("[✔] System environment safe. No policy breaches detected.")
     print("==================================================")
-    print("  PRE-CHECK PASS: 100% SUCCESSFUL TO IMPLEMENT   ")
+    print("  PRE-CHECK PASS: 100% SUCCESSFUL TO IMPLEMENT  ")
     print("==================================================\n")
 
 if __name__ == '__main__':
