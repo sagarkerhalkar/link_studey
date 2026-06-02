@@ -2,35 +2,141 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Link Study Portal</title>
+    <title>Global Link Study Control Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f6f9; color: #333; }
-        .container { max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: auto; }
-        h2 { color: #0056b3; border-bottom: 2px solid #0056b3; padding-bottom: 10px; }
-        input[type="url"], input[type="text"] { width: 100%; padding: 10px; margin: 10px 0 20px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
-        button:hover { background: #004085; }
-        .alert { background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 20px; word-break: break-all; }
-        .nav { margin-bottom: 20px; text-align: right; }
-        .nav a { color: #0056b3; text-decoration: none; font-weight: bold; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; background: #f4f6f9; color: #333; }
+        .banner { background: #1a237e; color: white; padding: 20px; border-radius: 6px; margin-bottom: 25px; }
+        .panel-grid { display: flex; flex-wrap: wrap; gap: 20px; }
+        .box { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex: 1; min-width: 320px; }
+        .wide-box { flex: 2; min-width: 600px; }
+        input, select { padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+        button { background: #1a237e; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
+        button:hover { background: #0d1b60; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 13px; }
+        th { background: #f5f5f5; color: #444; }
+        .url-text { color: #555; font-family: monospace; font-size: 12px; background: #fafafa; padding: 4px; border: 1px dashed #ddd; border-radius:3px; word-break: break-all;}
+        .alert { background: #c8e6c9; color: #2e7d32; padding: 12px; border-radius: 4px; margin-bottom: 20px; }
+        .chart-frame { max-width: 320px; margin: 20px auto 0 auto; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="nav"><a href="/stats">📈 View Analytics Dashboard</a></div>
-        <h2>🔗 Link Study Management System</h2>
-        {% if message %}
-            <div class="alert">{{ message }}</div>
-        {% endif %}
-        <form method="POST">
-            <label>Destination Long URL:</label>
-            <input type="url" name="url" placeholder="https://example.com/deep/path/to/resource" required>
-            
-            <label>Custom Short Tracking Code:</label>
-            <input type="text" name="short_code" placeholder="e.g., promo2026" required>
-            
-            <button type="submit">Generate & Track Link</button>
-        </form>
+
+    <div class="banner">
+        <h2>🌍 Global Link Study Command Suite</h2>
+        <p>LAN IP Address: 156.156.40.51 | Active Port Interface: 5800</p>
     </div>
+
+    {% if message %}
+        <div class="alert">{{ message }}</div>
+    {% endif %}
+
+    <div class="panel-grid" style="margin-bottom: 25px;">
+        <div class="box">
+            <h3>➕ Generate Global Trackable Link</h3>
+            <form method="POST">
+                <label>Target Destination URL:</label><br>
+                <input type="url" name="url" style="width:100%;" placeholder="https://youtube.com/watch?v=..." required><br>
+                
+                <label>Intended Platform Placement:</label><br>
+                <select name="platform" style="width:100%;" required>
+                    <option value="YouTube">YouTube</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Telegram">Telegram</option>
+                    <option value="Other">Other Alternative Media</option>
+                </select><br>
+                
+                <label>Custom Identifier Phrase:</label><br>
+                <input type="text" name="tracker_code" style="width:100%;" placeholder="e.g., campaign2026" required><br><br>
+                
+                <button type="submit">Deploy Tracker Link</button>
+            </form>
+        </div>
+
+        <div class="box">
+            <h3>📊 Platform Source Breakdown (Live Graph)</h3>
+            <div class="chart-frame">
+                <canvas id="sourcePieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="box wide-box" style="margin-bottom:25px;">
+        <h3>📈 Active System Trackers & Total Recorded Hits</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Intended Platform</th>
+                    <th>Destination Target URL</th>
+                    <th>Global Short Tracking Link (Copy This)</th>
+                    <th>Total Clicks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for link in links %}
+                <tr>
+                    <td><strong>{{ link.platform }}</strong></td>
+                    <td><div style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ link.original_url }}</div></td>
+                    <td><div class="url-text">{{ domain }}/click/{{ link.tracker_code }}</div></td>
+                    <td><span style="font-size:16px; color:#c62828;"><strong>{{ link.total_clicks }}</strong> hits</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="box wide-box">
+        <h3>📜 All-Time Click Streaming Log (Deep History Analysis)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tracker Code Identifier</th>
+                    <th>Detected Device Platform Source</th>
+                    <th>Visitor Routed IP IP</th>
+                    <th>Timestamp Record (UTC)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in history %}
+                <tr>
+                    <td><span style="background:#e8eaf6; padding:4px 8px; border-radius:4px;">{{ log.tracker_code }}</span></td>
+                    <td><strong>{{ log.detected_platform }}</strong></td>
+                    <td>{{ log.ip_address }}</td>
+                    <td>{{ log.clicked_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('sourcePieChart').getContext('2d');
+        const labelsArr = {{ labels|tojson }};
+        const countsArr = {{ counts|tojson }};
+        
+        if (labelsArr.length === 0) {
+            ctx.font = "14px Arial";
+            ctx.fillStyle = "#888";
+            ctx.fillText("Awaiting outbound data click streams...", 35, 120);
+        } else {
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labelsArr,
+                    datasets: [{
+                        data: countsArr,
+                        backgroundColor: ['#ff1744', '#d500f9', '#2979ff', '#00b0ff', '#00e676', '#ff9100'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
