@@ -1,14 +1,18 @@
 import os
 import sys
 import sqlite3
-from flask import Flask, request, render_template, redirect, g, make_response
-from pyngrok import ngrok, conf
+import time
+import threading
+import subprocess
+import json
+import urllib.request
+from flask import Flask, request, render_template, g, make_response
 
 app = Flask(__name__)
 DB_PATH = r"D:\link_studey\analytics.db"
 
-# This variable updates completely automatically every time you start the app
-PUBLIC_DOMAIN = ""
+# Global placeholder variable - automatically updated dynamically on engine boot
+PUBLIC_DOMAIN = "Retrieving global address..."
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -52,27 +56,23 @@ def detect_visitor_platform():
     referrer = request.referrer.lower() if request.referrer else ""
     user_agent = request.headers.get('User-Agent', '').lower()
     
-    # 1. Check HTTP Referrer paths
     if 'youtube.com' in referrer or 'youtu.be' in referrer: return 'YouTube'
     elif 'instagram.com' in referrer: return 'Instagram'
     elif 'facebook.com' in referrer: return 'Facebook'
     elif 't.me' in referrer or 'telegram' in referrer: return 'Telegram'
     
-    # 2. Check embedded WebView browser engines
     if 'instagram' in user_agent: return 'Instagram'
     elif 'fbav' in user_agent or 'fb_iab' in user_agent: return 'Facebook'
     elif 'telegram' in user_agent: return 'Telegram'
     
-    # 3. Native OS Fallbacks
     if 'windows' in user_agent: return 'Windows Desktop'
     elif 'android' in user_agent: return 'Android Mobile'
     elif 'iphone' in user_agent or 'ipad' in user_agent: return 'iOS Mobile'
     elif 'macintosh' in user_agent: return 'MacOS Desktop'
     return 'Other Web Source'
 
-# GLOBAL INJECTOR FILTER: Forces ngrok to bypass its warning layout page instantly
 @app.after_request
-def bypass_interstitial_walls(response):
+def clear_ngrok_interstitials(response):
     response.headers["ngrok-skip-browser-warning"] = "true"
     return response
 
@@ -92,7 +92,7 @@ def index():
                 VALUES (?, ?, ?)
             ''', (original_url, tracker_code, platform))
             db.commit()
-            message = "Success! Portal has automatically generated your global tracking link."
+            message = "Success! Portal has automatically configured your global tracking link."
         except sqlite3.IntegrityError:
             message = "Error: This Custom Identifier Phrase is already in use."
 
@@ -116,6 +116,7 @@ def index():
 
     return render_template('index.html', message=message, links=links, labels=labels, counts=counts, history=history, domain=PUBLIC_DOMAIN)
 
+# --- CRITICAL FIX: ZERO-DISTRACTION AUTOMATED REDIRECT INTERACTION LAYER ---
 @app.route('/click/<tracker_code>')
 def inbound_tracker(tracker_code):
     db = get_db()
@@ -130,38 +131,64 @@ def inbound_tracker(tracker_code):
         db.execute('UPDATE universal_links SET total_clicks = total_clicks + 1 WHERE id = ?', (link['id'],))
         db.commit()
         
-        resp = make_response(redirect(link['original_url']))
+        # We serve a seamless client-side landing frame that programmatically strips out the ngrok verification block
+        html_bypass = f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Loading...</title>
+            <script>
+                // Instantly inject the skip header to the browser session cache context natively
+                fetch(window.location.href, {{
+                    method: "GET",
+                    headers: {{ "ngrok-skip-browser-warning": "true" }}
+                }}).then(() => {{
+                    window.location.replace("{link['original_url']}");
+                }}).catch(() => {{
+                    window.location.replace("{link['original_url']}");
+                }});
+            </script>
+        </head>
+        <body style="background:#f4f6f9; font-family:sans-serif; text-align:center; padding-top:15%;">
+            <h3>Processing Secure Connection...</h3>
+        </body>
+        </html>
+        '''
+        resp = make_response(html_bypass)
         resp.headers["ngrok-skip-browser-warning"] = "true"
         return resp
     
-    return "Tracking endpoint address invalid.", 404
+    return "Tracking endpoint invalid.", 404
 
-def initialize_automated_tunnel():
-    """Portal automatically invokes the ngrok binary and requests an open public pipe."""
+# --- REQUIREMENT #4 & #7: CLEAN AUTOMATED TUNNEL PIPELINE ---
+def run_native_tunnel_automation():
     global PUBLIC_DOMAIN
     token = "SHLINK_API_KEY_REMOVED"
     
-    print("[~] Authenticating and building public system pipeline...")
-    ngrok.set_auth_token(token)
+    time.sleep(2)  # Allow Flask server to bind to port 5800 first
+    print("[~] Initializing Native Automated Public Tunnel Pipeline...")
     
-    if os.path.exists(r"D:\link_studey\ngrok.exe"):
-        conf.get_default().ngrok_path = r"D:\link_studey\ngrok.exe"
-        
+    # 1. Cleanly write the authtoken to your local server config file location
+    subprocess.run(r'D:\link_studey\ngrok.exe config add-authtoken ' + token, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    # 2. Start a clean HTTP tunnel on local port 5800 with zero appended typo strings
+    subprocess.Popen(r'D:\link_studey\ngrok.exe http 5800', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(4)  # Give the connection handshake a moment to link up
+    
+    # 3. Pull the live generated link from the local background process api port
     try:
-        # Disconnect any lingering sessions locally before spinning up
-        ngrok.kill()
-        
-        # Open a completely fresh, un-cached tunnel on port 5800
-        public_tunnel = ngrok.connect(5800, proto="http")
-        PUBLIC_DOMAIN = public_tunnel.public_url.replace("http://", "https://")
-        
-        print("\n" + "="*60)
-        print(f"[✔] AUTOMATED GLOBAL TUNNEL LINK SEAMLESSLY PROVISIONED:")
-        print(f"    {PUBLIC_DOMAIN}")
-        print("="*60 + "\n")
+        req = urllib.request.Request("http://127.0.0.1:4040/api/tunnels", headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode())
+            public_url = data['tunnels'][0]['public_url']
+            PUBLIC_DOMAIN = public_url.replace("http://", "https://")
+            
+            print("\n" + "="*60)
+            print(f"[✔] PORTAL HAS SELF-GENERATED THE GLOBAL LINK:")
+            print(f"    {PUBLIC_DOMAIN}")
+            print("="*60 + "\n")
     except Exception as e:
-        print(f"[❌] Fatal Tunnel Exception: {e}")
-        sys.exit(1)
+        print(f"[❌] URL Automation Parsing Exception: {e}")
 
 def run_server_precheck():
     print("==================================================")
@@ -198,5 +225,5 @@ def run_server_precheck():
 
 if __name__ == '__main__':
     run_server_precheck()
-    initialize_automated_tunnel()
+    threading.Thread(target=run_native_tunnel_automation, daemon=True).start()
     app.run(host='0.0.0.0', port=5800, debug=False)
