@@ -3,39 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <title>NEXT TOPPERS LINK STUDY</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; background: #f0f2f5; color: #333; }
-        .grid-container { display: flex; gap: 25px; flex-wrap: wrap; max-width: 1300px; margin-bottom: 25px;}
+        .grid-container { display: flex; gap: 25px; flex-wrap: wrap; max-width: 1400px; margin-bottom: 25px;}
         .box { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex: 1; min-width: 400px; }
         .box-full { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
         h2, h3 { color: #0b194f; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; margin-top: 0; }
         input, select { padding: 10px 15px; margin: 6px 0 15px 0; border: 1px solid #ced4da; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
         .search-bar { width: 100%; max-width: 400px; margin-bottom: 15px; padding: 12px; border-radius: 8px; border: 1px solid #007bff; }
+        
+        /* Branded clipboard automation block matrix styles */
+        .btn-panel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
+        .copy-btn { border: none; padding: 7px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; color: white; text-align: center; transition: opacity 0.2s; }
+        .copy-btn:hover { opacity: 0.9; }
+        .btn-wa { background: #25D366; }
+        .btn-ig { background: #E1306C; }
+        .btn-li { background: #0077B5; }
+        .btn-tg { background: #0088cc; }
+        .btn-yt { background: #FF0000; }
+        .btn-gen { background: #4b5563; }
+
         button.btn-main { background: #0b194f; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; width: 100%;}
-        button.btn-copy { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; display: block; margin-top: 5px;}
         table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left; }
         th, td { padding: 14px; border-bottom: 1px solid #edf2f7; font-size: 14px; vertical-align: top;}
         th { background: #f8f9fa; color: #4a5568; font-weight: 600; white-space: nowrap;}
         .token-link { color: #3b82f6; font-weight: 700; cursor: pointer; text-decoration: none; padding: 4px 8px; background: #eff6ff; border-radius: 4px; display: inline-block;}
         .alert { background: #d1fae5; color: #065f46; padding: 15px; margin-bottom: 20px; border-radius: 6px; font-weight: 500; }
         
-        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
-        .modal-content { background-color: #ffffff; margin: 5% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 850px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative; display: flex; flex-wrap: wrap; gap: 30px;}
+        .modal-content { background-color: #ffffff; margin: 60px auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 650px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative;}
         .close { position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #94a3b8; }
-        .modal-left { flex: 1.2; min-width: 300px; }
-        .modal-right { flex: 1; min-width: 250px; text-align: center; }
-        .table-container { max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .table-container { max-height: 380px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 15px; }
         .table-container th { position: sticky; top: 0; background: #f1f5f9; z-index: 1; }
     </style>
 </head>
 <body>
 
-    <h2>📊 NEXT TOPPERS LINK STUDY</h2>
+    <h2>📊 NEXT TOPPERS LINK STUDY CORESYSTEM</h2>
     {% if message %}<div class="alert">✅ {{ message }}</div>{% endif %}
 
     <div class="grid-container">
+        <!-- FORM CONTAINER -->
         <div class="box">
             <h3>🔗 Generate Global Trackable Link</h3>
             <form method="POST">
@@ -61,14 +69,26 @@
             </form>
         </div>
 
+        <!-- OVERALL NETWORK METRICS LEADERBOARD TABLE -->
         <div class="box">
-            <h3>🌍 Global Platform Traffic Overview</h3>
-            <div style="width: 100%; height: 280px; display: flex; align-items: center; justify-content: center;">
-                <canvas id="globalPieChart"></canvas>
+            <h3>🌍 Global Platform Traffic Overview (Leaderboard)</h3>
+            <div class="table-container" style="height: 340px; margin-top:0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Traffic Source Platform</th>
+                            <th style="text-align: right;">Total Network Hits</th>
+                        </tr>
+                    </thead>
+                    <tbody id="globalTableBody">
+                        <!-- Injected via JavaScript -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
+    <!-- MAIN DATA LOG METRIC MATRIX -->
     <div class="box-full">
         <h3>Link Analysis Summary <span style="font-size: 12px; color: #10b981; font-weight: normal;">(Auto-refreshing every 1s)</span></h3>
         <input type="text" id="tableFilter" class="search-bar" onkeyup="filterTable()" placeholder="🔍 Filter by Platform, Identifier, URL, or Remark...">
@@ -81,25 +101,146 @@
                         <th>Identifier</th>
                         <th>Remark</th>
                         <th>Original URL</th>
-                        <th>URL</th>
+                        <th>Automated Distribution Links (Click to Copy Automated Tracking Path)</th>
                         <th>Devices</th>
                         <th>Total Click</th>
                     </tr>
                 </thead>
                 <tbody id="liveTableBody">
-                    </tbody>
+                    <!-- Injected via JavaScript -->
+                </tbody>
             </table>
         </div>
     </div>
 
+    <!-- AUDIT REPORT MODAL (TABULAR DISPLAY MATRIX) -->
     <div id="analysisModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <div class="modal-left">
-                <h3 id="modalTitle" style="margin-top: 0; color: #0f172a; border-bottom: none;"></h3>
-                <div class="table-container">
-                    <table>
-                        <thead>
+            <h3 id="modalTitle" style="margin-top:0; color:#0b194f; font-weight: 600;"></h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Platform</th>
+                            <th>Device Name or IP Address</th>
+                            <th style="text-align: center;">Clicks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleCustomPlatform() {
+            const select = document.getElementById("platformSelect");
+            const customInput = document.getElementById("customPlatformInput");
+            customInput.style.display = (select.value === "CUSTOM_ADD_NEW") ? "block" : "none";
+            customInput.required = (select.value === "CUSTOM_ADD_NEW");
+        }
+
+        function copyUrl(urlText, label) {
+            const tempInput = document.createElement("textarea");
+            tempInput.value = urlText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            alert(`✅ Automated ${label} link copied to your clipboard!`);
+        }
+
+        function filterTable() {
+            let input = document.getElementById("tableFilter").value.toLowerCase();
+            let rows = document.getElementById("liveTableBody").getElementsByTagName("tr");
+            for (let row of rows) {
+                row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+            }
+        }
+
+        function fetchLiveStats() {
+            fetch('/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('liveTableBody');
+                    tbody.innerHTML = ""; 
+                    data.links.forEach(link => {
+                        const baseRoute = `${data.domain}/l/${link.tracker_code}`;
+                        tbody.innerHTML += `
                             <tr>
-                                <th>Platform</th>
-                                <th>Device Name
+                                <td><strong style="color: #475569;">${link.platform}</strong></td>
+                                <td><span class="token-link" onclick="openModal('${link.tracker_code}')">${link.tracker_code}</span></td>
+                                <td><span style="color: #64748b;">${link.remark || '-'}</span></td>
+                                <td style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    <a href="${link.original_url}" target="_blank" style="color: #3b82f6; font-size: 12px;">${link.original_url}</a>
+                                </td>
+                                <td>
+                                    <span style="font-family: monospace; font-size:12px; color:#0f172a; font-weight:bold;">${baseRoute}</span>
+                                    <div class="btn-panel">
+                                        <button class="copy-btn btn-wa" onclick="copyUrl('${baseRoute}?s=wa', 'WhatsApp')">WhatsApp</button>
+                                        <button class="copy-btn btn-ig" onclick="copyUrl('${baseRoute}?s=ig', 'Instagram')">Instagram</button>
+                                        <button class="copy-btn btn-li" onclick="copyUrl('${baseRoute}?s=li', 'LinkedIn')">LinkedIn</button>
+                                        <button class="copy-btn btn-tg" onclick="copyUrl('${baseRoute}?s=tg', 'Telegram')">Telegram</button>
+                                        <button class="copy-btn btn-yt" onclick="copyUrl('${baseRoute}?s=yt', 'YouTube')">YouTube</button>
+                                        <button class="copy-btn btn-gen" onclick="copyUrl('${baseRoute}', 'Standard')">General Link</button>
+                                    </div>
+                                </td>
+                                <td><strong style="color: #10b981; font-size: 15px;">${link.unique_devices}</strong></td>
+                                <td><strong style="color: #0f172a; font-size: 15px;">${link.total_clicks}</strong></td>
+                            </tr>
+                        `;
+                    });
+                    filterTable();
+
+                    const gbody = document.getElementById('globalTableBody');
+                    gbody.innerHTML = "";
+                    if(data.global_table.length === 0) {
+                        gbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#94a3b8; padding: 20px;">No incoming traffic profiles recorded.</td></tr>';
+                    } else {
+                        data.global_table.forEach(row => {
+                            gbody.innerHTML += `
+                                <tr>
+                                    <td><strong>${row.platform}</strong></td>
+                                    <td style="text-align: right; color: #10b981; font-weight: bold;">${row.count} hits</td>
+                                </tr>
+                            `;
+                        });
+                    }
+                });
+        }
+        setInterval(fetchLiveStats, 1000);
+        fetchLiveStats();
+
+        function openModal(trackerCode) {
+            document.getElementById('modalTitle').innerText = "Detailed Link Audit Footprint Report: " + trackerCode;
+            fetch('/api/analysis/' + trackerCode)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('modalTableBody');
+                    tbody.innerHTML = "";
+                    let totalSum = 0;
+                    
+                    data.devices.forEach(dev => {
+                        totalSum += dev.click_count;
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${dev.detected_platform}</strong></td>
+                                <td style="font-family: monospace; color: #475569;">${dev.ip_address}</td>
+                                <td style="text-align: center;"><strong style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${dev.click_count}</strong></td>
+                            </tr>`;
+                    });
+
+                    tbody.innerHTML += `
+                        <tr style="background: #f8fafc;">
+                            <td colspan="2" style="text-align: right; color: #0f172a; font-weight: bold; padding: 14px;">Total Click</td>
+                            <td style="text-align: center; color: #10b981; font-size: 16px; font-weight: bold;">${totalSum}</td>
+                        </tr>`;
+                    
+                    document.getElementById('analysisModal').style.display = "block";
+                });
+        }
+        function closeModal() { document.getElementById('analysisModal').style.display = "none"; }
+    </script>
+</body>
+</html>
