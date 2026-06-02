@@ -1,12 +1,15 @@
 import os
 import sys
 import sqlite3
-from flask import Flask, request, render_template, redirect, g
+import subprocess
+import time
+import threading
+from flask import Flask, request, render_template, redirect, g, make_response
 
 app = Flask(__name__)
 DB_PATH = r"D:\link_studey\analytics.db"
 
-# GLOBAL SETTING: Replace with your actual ngrok or public tunnel URL
+# Global placeholder that will be automatically updated by our backend tunnel manager
 PUBLIC_DOMAIN = "http://156.156.40.51:5800"
 
 def get_db():
@@ -66,6 +69,12 @@ def detect_visitor_platform():
     elif 'macintosh' in user_agent: return 'MacOS Desktop'
     return 'Other Web Source'
 
+# Middleware to programmatically strip intermediate warning intercepts
+@app.after_request
+def bypass_tunnel_warnings(response):
+    response.headers["Bypass-Tunnel-Reminder"] = "true"
+    return response
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     db = get_db()
@@ -82,7 +91,7 @@ def index():
                 VALUES (?, ?, ?)
             ''', (original_url, tracker_code, platform))
             db.commit()
-            message = "Success! New link registered to target platform surveillance."
+            message = "Success! Portal auto-generated your global tracker link below."
         except sqlite3.IntegrityError:
             message = "Error: This Tracking Custom Code is already in use."
 
@@ -120,9 +129,30 @@ def inbound_tracker(tracker_code):
         db.execute('UPDATE universal_links SET total_clicks = total_clicks + 1 WHERE id = ?', (link['id'],))
         db.commit()
         
+        # Immediate clean redirection instruction
         return redirect(link['original_url'])
     
     return "Tracking endpoint invalid.", 404
+
+# --- REQUIREMENT #7: PORTAL SELF-GENERATES THE PUBLIC LINK DYNAMICALLY ---
+def start_localtunnel():
+    global PUBLIC_DOMAIN
+    time.sleep(2) # Allow Flask 2 seconds to initialize port 5800 first
+    print("[~] Initializing Automated Public Tunnel Pipeline...")
+    
+    # Calls localtunnel natively via npx node subsystem package manager
+    cmd = "npx localtunnel --port 5800"
+    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STProcess or subprocess.PIPE)
+    
+    for line in iter(process.stdout.readline, b''):
+        line_str = line.decode('utf-8').strip()
+        if "your url is" in line_str:
+            PUBLIC_DOMAIN = line_str.split("is:")[-1].strip()
+            print("\n" + "="*60)
+            print(f"[✔] PORTAL HAS SELF-GENERATED THE GLOBAL LINK:")
+            print(f"    {PUBLIC_DOMAIN}")
+            print("="*60 + "\n")
+            break
 
 def run_server_precheck():
     print("==================================================")
@@ -159,4 +189,6 @@ def run_server_precheck():
 
 if __name__ == '__main__':
     run_server_precheck()
+    # Spin up the tunnel pipeline tool as a non-blocking background process threading instance
+    threading.Thread(target=start_localtunnel, daemon=True).start()
     app.run(host='0.0.0.0', port=5800, debug=False)
