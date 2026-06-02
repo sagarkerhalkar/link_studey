@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Link Study Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f9; }
+        .dashboard-grid { display: flex; flex-wrap: wrap; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; min-width: 300px; }
+        .card.wide { flex: 2; min-width: 500px; }
+        h3 { color: #333; border-bottom: 2px solid #eaeaea; padding-bottom: 8px; margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #ddd; }
+        th { background: #0056b3; color: white; }
+        .chart-box { max-width: 350px; margin: auto; }
+        .nav { margin-bottom: 20px; }
+        .nav a { color: #0056b3; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="nav"><a href="/">⬅ Back to Link Generator</a></div>
+    <h2>📊 Link Performance Summary Report</h2>
+    
+    <div class="dashboard-grid">
+        <div class="card wide">
+            <h3>🔗 Tracked Links Overview</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Short Code</th>
+                        <th>Original Destination</th>
+                        <th>Total Hits</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for link in links %}
+                    <tr>
+                        <td><strong>{{ link.short_code }}</strong></td>
+                        <td>{{ link.original_url }}</td>
+                        <td><strong>{{ link.total_hits }} hits</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>📱 Platform Traffic Share</h3>
+            <div class="chart-box">
+                <canvas id="platformChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <div class="card" style="margin-top: 20px;">
+        <h3>📜 Deep Analysis Log (All-Time History)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Link Code</th>
+                    <th>Platform Source</th>
+                    <th>Visitor IP Address</th>
+                    <th>Timestamp (UTC)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in history %}
+                <tr>
+                    <td><span style="background: #e1ecf4; padding: 3px 8px; border-radius:3px;">{{ row.short_code }}</span></td>
+                    <td><strong>{{ row.platform }}</strong></td>
+                    <td>{{ row.ip_address }}</td>
+                    <td>{{ row.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Injecting backend python data parameters directly into Chart.js
+        const ctx = document.getElementById('platformChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: {{ labels|tojson }},
+                datasets: [{
+                    label: 'Hits by Platform',
+                    data: {{ counts|tojson }},
+                    backgroundColor: [
+                        '#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

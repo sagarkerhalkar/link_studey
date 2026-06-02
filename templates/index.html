@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Link Study Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f6f9; color: #333; }
+        .container { max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: auto; }
+        h2 { color: #0056b3; border-bottom: 2px solid #0056b3; padding-bottom: 10px; }
+        input[type="url"], input[type="text"] { width: 100%; padding: 10px; margin: 10px 0 20px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background: #004085; }
+        .alert { background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 20px; word-break: break-all; }
+        .nav { margin-bottom: 20px; text-align: right; }
+        .nav a { color: #0056b3; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav"><a href="/stats">📈 View Analytics Dashboard</a></div>
+        <h2>🔗 Link Study Management System</h2>
+        {% if message %}
+            <div class="alert">{{ message }}</div>
+        {% endif %}
+        <form method="POST">
+            <label>Destination Long URL:</label>
+            <input type="url" name="url" placeholder="https://example.com/deep/path/to/resource" required>
+            
+            <label>Custom Short Tracking Code:</label>
+            <input type="text" name="short_code" placeholder="e.g., promo2026" required>
+            
+            <button type="submit">Generate & Track Link</button>
+        </form>
+    </div>
+</body>
+</html>
