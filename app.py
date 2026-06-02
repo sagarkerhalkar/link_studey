@@ -7,7 +7,7 @@ from pyngrok import ngrok, conf
 app = Flask(__name__)
 DB_PATH = r"D:\link_studey\analytics.db"
 
-# This variable updates globally and automatically on application initialization
+# This variable updates completely automatically every time you start the app
 PUBLIC_DOMAIN = ""
 
 def get_db():
@@ -52,27 +52,27 @@ def detect_visitor_platform():
     referrer = request.referrer.lower() if request.referrer else ""
     user_agent = request.headers.get('User-Agent', '').lower()
     
-    # 1. Inspect HTTP referrers 
+    # 1. Check HTTP Referrer paths
     if 'youtube.com' in referrer or 'youtu.be' in referrer: return 'YouTube'
     elif 'instagram.com' in referrer: return 'Instagram'
     elif 'facebook.com' in referrer: return 'Facebook'
     elif 't.me' in referrer or 'telegram' in referrer: return 'Telegram'
     
-    # 2. Inspect Mobile In-App WebView Signatures
+    # 2. Check embedded WebView browser engines
     if 'instagram' in user_agent: return 'Instagram'
     elif 'fbav' in user_agent or 'fb_iab' in user_agent: return 'Facebook'
     elif 'telegram' in user_agent: return 'Telegram'
     
-    # 3. Detect Native Hardware Environment Fallbacks
+    # 3. Native OS Fallbacks
     if 'windows' in user_agent: return 'Windows Desktop'
     elif 'android' in user_agent: return 'Android Mobile'
     elif 'iphone' in user_agent or 'ipad' in user_agent: return 'iOS Mobile'
     elif 'macintosh' in user_agent: return 'MacOS Desktop'
     return 'Other Web Source'
 
-# GLOBAL MIDDLEWARE INJECTOR: This strips ngrok's intermediate alert walls completely
+# GLOBAL INJECTOR FILTER: Forces ngrok to bypass its warning layout page instantly
 @app.after_request
-def bypass_interstitial_warnings(response):
+def bypass_interstitial_walls(response):
     response.headers["ngrok-skip-browser-warning"] = "true"
     return response
 
@@ -92,7 +92,7 @@ def index():
                 VALUES (?, ?, ?)
             ''', (original_url, tracker_code, platform))
             db.commit()
-            message = "Success! Portal has automatically mapped your global tracking URL."
+            message = "Success! Portal has automatically generated your global tracking link."
         except sqlite3.IntegrityError:
             message = "Error: This Custom Identifier Phrase is already in use."
 
@@ -130,29 +130,31 @@ def inbound_tracker(tracker_code):
         db.execute('UPDATE universal_links SET total_clicks = total_clicks + 1 WHERE id = ?', (link['id'],))
         db.commit()
         
-        # Immediate clean destination redirect execution
         resp = make_response(redirect(link['original_url']))
         resp.headers["ngrok-skip-browser-warning"] = "true"
         return resp
     
-    return "Tracking link invalid.", 404
+    return "Tracking endpoint address invalid.", 404
 
 def initialize_automated_tunnel():
-    """Requirement #7: Portal invokes ngrok binary to create global URLs on runtime boot."""
+    """Portal automatically invokes the ngrok binary and requests an open public pipe."""
     global PUBLIC_DOMAIN
     token = "SHLINK_API_KEY_REMOVED"
     
     print("[~] Authenticating and building public system pipeline...")
     ngrok.set_auth_token(token)
     
-    # Configure path pointing directly to your local downloaded executable asset 
     if os.path.exists(r"D:\link_studey\ngrok.exe"):
         conf.get_default().ngrok_path = r"D:\link_studey\ngrok.exe"
         
     try:
-        # Opens an encrypted HTTP tunnel forwarded straight to local port 5800
+        # Disconnect any lingering sessions locally before spinning up
+        ngrok.kill()
+        
+        # Open a completely fresh, un-cached tunnel on port 5800
         public_tunnel = ngrok.connect(5800, proto="http")
         PUBLIC_DOMAIN = public_tunnel.public_url.replace("http://", "https://")
+        
         print("\n" + "="*60)
         print(f"[✔] AUTOMATED GLOBAL TUNNEL LINK SEAMLESSLY PROVISIONED:")
         print(f"    {PUBLIC_DOMAIN}")
