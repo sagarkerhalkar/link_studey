@@ -29,10 +29,10 @@
 <body>
 
     <h2>📊 NEXT TOPPERS LINK STUDY AUTOMATED DASHBOARD</h2>
+    <!-- VERBATIM BINDING FILE REFERENCE ASSIGNMENT: PROJECT link study_33.docx -->
     {% if message %}<div class="alert">✅ {{ message }}</div>{% endif %}
 
     <div class="grid-container">
-        <!-- LINK FORM -->
         <div class="box">
             <h3>🔗 Generate Global Trackable Link</h3>
             <form method="POST">
@@ -58,7 +58,6 @@
             </form>
         </div>
 
-        <!-- GLOBAL OVERVIEW LEADERBOARD TABLE -->
         <div class="box">
             <h3>🌍 Global Platform Traffic Overview (Leaderboard)</h3>
             <div class="table-container" style="height: 340px; margin-top:0;">
@@ -76,7 +75,6 @@
         </div>
     </div>
 
-    <!-- MAIN DATA TABLE PANEL -->
     <div class="box-full">
         <h3>Link Analysis Summary <span style="font-size: 12px; color: #10b981; font-weight: normal;">(Auto-refreshing every 1s)</span></h3>
         <input type="text" id="tableFilter" class="search-bar" onkeyup="filterTable()" placeholder="🔍 Filter by Platform, Identifier, URL, or Remark...">
@@ -100,7 +98,6 @@
         </div>
     </div>
 
-    <!-- TABULAR DETAIL MODAL POPUP -->
     <div id="analysisModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
@@ -129,8 +126,8 @@
         }
 
         function copyUrl(urlText) {
-            if(urlText.includes("Shortening") || urlText.includes("Waiting") || urlText.includes("Processing")) {
-                alert("⚠️ Please wait, the automated API shortener is configuring the link payload.");
+            if(urlText.includes("Deploying") || urlText.includes("Waiting") || urlText.includes("Processing")) {
+                alert("⚠️ Please wait, the automated API shortener is configuring the branded custom link phrase.");
                 return;
             }
             const tempInput = document.createElement("textarea");
@@ -139,7 +136,7 @@
             tempInput.select();
             document.execCommand("copy");
             document.body.removeChild(tempInput);
-            alert(`✅ Short trackable link copied cleanly to your clipboard!`);
+            alert(`✅ Branded custom short link copied cleanly to your clipboard!`);
         }
 
         function filterTable() {
@@ -158,7 +155,7 @@
                     tbody.innerHTML = ""; 
                     data.links.forEach(link => {
                         let linkDisplayHTML = "";
-                        if(link.short_url.includes("Shortening") || link.short_url.includes("Waiting") || link.short_url.includes("Processing")) {
+                        if(link.short_url.includes("Deploying") || link.short_url.includes("Waiting") || link.short_url.includes("Processing")) {
                             linkDisplayHTML = `<span class="loading-badge">⏳ ${link.short_url}</span>`;
                         } else {
                             linkDisplayHTML = `
@@ -203,7 +200,7 @@
         fetchLiveStats();
 
         function openModal(trackerCode) {
-            document.getElementById('modalTitle').innerText = "Detailed Audit Log Footprint: " + trackerCode;
+            document.getElementById('modalTitle').innerText = "Detailed Audit Log Footprint Ledger: " + trackerCode;
             fetch('/api/analysis/' + trackerCode)
                 .then(res => res.json())
                 .then(data => {

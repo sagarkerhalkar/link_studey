@@ -13,13 +13,11 @@ DB_PATH = r"D:\link_studey\analytics.db"
 PUBLIC_DOMAIN = "Retrieving global address..."
 LAST_KNOWN_DOMAIN = ""
 
-# Live in-memory cache to look up short links instantly without locking up the JSON refresh loop
+# In-memory registers to handle lightning-fast cross-referencing
 SHORT_URL_CACHE = {}
-
-# Temporary server-side tracking registry to automatically pair background previews with real user clicks
 APP_PREVIEW_REGISTRY = {}
 
-# Explicit verification array to screen out preview crawlers from double-counting hits
+# Comprehensive crawler signatures to prevent artificial double hits on mobile browsers
 BOT_SIGNATURES = ['facebookexternalhit', 'whatsapp', 'telegrambot', 'twitterbot', 'linkedinbot', 'discordbot', 'preview', 'bot', 'slackbot', 'crawler']
 
 def get_db():
@@ -39,81 +37,108 @@ def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        
-        # Initialize Platforms Lookup Table
         cursor.execute('CREATE TABLE IF NOT EXISTS custom_platforms (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL)')
-        for p in ['YouTube', 'Instagram', 'Facebook', 'Telegram', 'WhatsApp', 'X (Twitter)', 'LinkedIn', 'Discord', 'Other']:
-            try:
-                cursor.execute('INSERT INTO custom_platforms (name) VALUES (?)', (p,))
-            except sqlite3.IntegrityError:
-                pass
+        for p in ['YouTube', 'Instagram', 'Facebook', 'Telegram', 'WhatsApp', 'X (Twitter)', 'LinkedIn', 'Other']:
+            try: cursor.execute('INSERT INTO custom_platforms (name) VALUES (?)', (p,))
+            except sqlite3.IntegrityError: pass
 
-        # Initialize Universal Links Directory Table
         cursor.execute('''CREATE TABLE IF NOT EXISTS universal_links (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, original_url TEXT NOT NULL,
                 tracker_code TEXT UNIQUE NOT NULL, platform TEXT NOT NULL, remark TEXT DEFAULT '')''')
         
-        # Structural migration check to prevent column resolution errors
         cursor.execute("PRAGMA table_info(universal_links)")
         columns = [col[1] for col in cursor.fetchall()]
         if 'remark' not in columns:
             cursor.execute("ALTER TABLE universal_links ADD COLUMN remark TEXT DEFAULT ''")
 
-        # Initialize Analytical Diagnostic Log Ledger Table
         cursor.execute('''CREATE TABLE IF NOT EXISTS tracking_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, link_id INTEGER, detected_platform TEXT,
                 ip_address TEXT, clicked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(link_id) REFERENCES universal_links(id))''')
         conn.commit()
 
-def fetch_automated_short_url(tracker_code, long_url):
-    """Asynchronous background worker to process global micro-shorteners cleanly"""
-    # 1. Primary Engine Attempt (Is.gd - yields ultra short tokens)
+def get_subnet_base(ip_address):
+    """Tracks IP changes across cellular mobile towers seamlessly"""
+    if ":" in ip_address:
+        return ":".join(ip_address.split(":")[:3])
+    parts = ip_address.split(".")
+    if len(parts) == 4:
+        return ".".join(parts[:3])
+    return ip_address
+
+def fetch_resilient_short_url(tracker_code, long_url):
+    """Sequential Multi-API Shortening Engine with instant custom alias pairing"""
+    
+    # API 1: TinyURL Core Pipeline with Custom Alias mapping
     try:
-        api_url = f"https://is.gd/create.php?format=simple&url={urllib.parse.quote(long_url)}"
-        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-        with urllib.request.urlopen(req, timeout=6) as response:
-            short_link = response.read().decode('utf-8').strip()
-            if "is.gd" in short_link:
-                SHORT_URL_CACHE[tracker_code] = short_link
+        api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(long_url)}&alias={urllib.parse.quote(tracker_code)}"
+        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=4) as response:
+            res_text = response.read().decode('utf-8').strip()
+            if "tinyurl.com" in res_text and "error" not in res_text.lower():
+                SHORT_URL_CACHE[tracker_code] = res_text
                 return
     except Exception:
         pass
 
-    # 2. Resilient Backup Fallback Attempt (TinyURL Engine)
+    # API 2: Ulvis.net Pipeline (High tolerance for dynamic reverse proxy tunnels)
+    try:
+        api_url = f"https://ulvis.net/api.php?url={urllib.parse.quote(long_url)}&custom={urllib.parse.quote(tracker_code)}"
+        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=4) as response:
+            res_text = response.read().decode('utf-8').strip()
+            if "ulvis.net" in res_text and "error" not in res_text.lower():
+                SHORT_URL_CACHE[tracker_code] = res_text
+                return
+    except Exception:
+        pass
+
+    # API 3: Da.gd Branded Shortcut Layer
+    try:
+        api_url = f"https://da.gd/s?url={urllib.parse.quote(long_url)}&shorturl={urllib.parse.quote(tracker_code)}"
+        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=4) as response:
+            res_text = response.read().decode('utf-8').strip()
+            if "da.gd" in res_text and "error" not in res_text.lower():
+                SHORT_URL_CACHE[tracker_code] = res_text
+                return
+    except Exception:
+        pass
+
+    # Fallback to prevent long link leakages if the custom keyword is globally claimed
     try:
         api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(long_url)}"
         req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=6) as response:
-            short_link = response.read().decode('utf-8').strip()
-            if "tinyurl.com" in short_link:
-                SHORT_URL_CACHE[tracker_code] = short_link
+        with urllib.request.urlopen(req, timeout=4) as response:
+            res_text = response.read().decode('utf-8').strip()
+            if "tinyurl.com" in res_text:
+                SHORT_URL_CACHE[tracker_code] = res_text
                 return
     except Exception:
         pass
 
-    # Revert state back on server timeout so thread attempts reconfiguration
-    SHORT_URL_CACHE.pop(tracker_code, None)
+    SHORT_URL_CACHE[tracker_code] = f"{PUBLIC_DOMAIN}/l/{tracker_code}"
 
 def identify_traffic_origin(req, link_id, visitor_ip):
     user_agent = req.headers.get('User-Agent', '').lower()
     referrer = req.referrer.lower() if req.referrer else ""
-    correlation_key = f"{visitor_ip}_{link_id}"
+    subnet_key = get_subnet_base(visitor_ip)
+    correlation_key = f"{subnet_key}_{link_id}"
     
-    # 1. Check if this IP address recently generated an automated background preview token
+    # 1. Match against active background app preview tokens held in memory
     if correlation_key in APP_PREVIEW_REGISTRY:
         saved_platform, timestamp = APP_PREVIEW_REGISTRY[correlation_key]
-        if time.time() - timestamp < 600:
+        if time.time() - timestamp < 900:
             return saved_platform
 
-    # 2. Extract standard system application tokens passed by modern in-app web views
-    if 'instagram' in user_agent or 'instagram.com' in referrer: return 'Instagram'
+    # 2. Extract application wrapper signatures from the headers natively
+    if 'whatsapp' in user_agent or 'web.whatsapp' in referrer or 'whatsapp.com' in referrer: return 'WhatsApp'
+    elif 'instagram' in user_agent or 'instagram.com' in referrer: return 'Instagram'
     elif 'fbav' in user_agent or 'facebook.com' in referrer: return 'Facebook'
     elif 'telegram' in user_agent or 't.me' in referrer: return 'Telegram'
     elif 'linkedin' in user_agent or 'linkedin.com' in referrer: return 'LinkedIn'
     elif 'discord' in user_agent or 'discord.com' in referrer: return 'Discord'
     elif 'twitter' in user_agent or 'x.com' in referrer: return 'X (Twitter)'
-    elif 'whatsapp' in user_agent: return 'WhatsApp'
     
     return 'Direct Link / Web Browser'
 
@@ -138,7 +163,7 @@ def index():
             db.commit()
             message = "Automated tracking short link successfully deployed!"
         except sqlite3.IntegrityError:
-            message = "Error: This short identifier phrase token is currently active."
+            message = "Error: Identifier phrase already in use."
 
     platforms = [row['name'] for row in db.execute('SELECT name FROM custom_platforms ORDER BY id').fetchall()]
     return render_template('index.html', message=message, platforms=platforms, domain=PUBLIC_DOMAIN)
@@ -148,7 +173,6 @@ def get_stats():
     global LAST_KNOWN_DOMAIN, SHORT_URL_CACHE
     db = get_db()
     
-    # Critical Sync Check: If Ngrok changes its base global endpoint domain, wipe old cached values instantly
     if "Retrieving" not in PUBLIC_DOMAIN and PUBLIC_DOMAIN != LAST_KNOWN_DOMAIN:
         SHORT_URL_CACHE.clear()
         LAST_KNOWN_DOMAIN = PUBLIC_DOMAIN
@@ -161,20 +185,19 @@ def get_stats():
         unique_devices = db.execute('SELECT COUNT(DISTINCT ip_address) as count FROM tracking_history WHERE link_id = ?', (row['id'],)).fetchone()['count']
         total_clicks = db.execute('SELECT COUNT(*) as count FROM tracking_history WHERE link_id = ?', (row['id'],)).fetchone()['count']
         
-        # Automated Background URL Token Processing Pipeline
         if "ngrok-free" in PUBLIC_DOMAIN:
             full_ngrok_route = f"{PUBLIC_DOMAIN}/l/{tracker_code}"
             if tracker_code not in SHORT_URL_CACHE:
-                SHORT_URL_CACHE[tracker_code] = "Shortening link..."
-                threading.Thread(target=fetch_automated_short_url, args=(tracker_code, full_ngrok_route), daemon=True).start()
+                SHORT_URL_CACHE[tracker_code] = "Deploying custom alias name..."
+                threading.Thread(target=fetch_resilient_short_url, args=(tracker_code, full_ngrok_route), daemon=True).start()
         else:
-            SHORT_URL_CACHE[tracker_code] = "Waiting for public server handshake..."
+            SHORT_URL_CACHE[tracker_code] = "Waiting for global server tunnel link..."
 
         links.append({
             'platform': row['platform'], 'tracker_code': tracker_code,
             'remark': row['remark'], 'original_url': row['original_url'],
             'unique_devices': unique_devices, 'total_clicks': total_clicks,
-            'short_url': SHORT_URL_CACHE.get(tracker_code, "Processing...")
+            'short_url': SHORT_URL_CACHE.get(tracker_code, "Processing link data...")
         })
         
     global_traffic = db.execute('SELECT detected_platform, COUNT(*) as count FROM tracking_history GROUP BY detected_platform ORDER BY count DESC').fetchall()
@@ -187,7 +210,7 @@ def get_stats():
 def link_analysis(tracker_code):
     db = get_db()
     link = db.execute('SELECT id FROM universal_links WHERE tracker_code = ?', (tracker_code,)).fetchone()
-    if not link: return jsonify({'error': 'Target reference missing'}), 404
+    if not link: return jsonify({'error': 'Not found'}), 404
     
     device_rows = db.execute('SELECT detected_platform, ip_address, COUNT(*) as click_count FROM tracking_history WHERE link_id = ? GROUP BY ip_address ORDER BY click_count DESC', (link['id'],)).fetchall()
     return jsonify({'devices': [dict(r) for r in device_rows]})
@@ -198,39 +221,37 @@ def inbound_tracker(tracker_code):
     db = get_db()
     
     link = db.execute('SELECT * FROM universal_links WHERE tracker_code = ?', (tracker_code,)).fetchone()
-    if not link:
-        return "Tracking reference signatures do not match.", 404
+    if not link: return "Invalid link reference specifications.", 404
 
-    # Extract true client endpoint IP address cleanly out of proxy header arrays to calculate unique devices
     raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     visitor_ip = raw_ip.split(',')[0].strip() if raw_ip else request.remote_addr
-    correlation_key = f"{visitor_ip}_{link['id']}"
+    subnet_key = get_subnet_base(visitor_ip)
+    correlation_key = f"{subnet_key}_{link['id']}"
 
-    # 1. Silently capture background crawler app previews without writing fake click entries
+    # 1. Silently handle background mobile app previews without creating duplicate clicks
     if 'whatsapp' in user_agent or 'whatsapp' in request.headers.get('Purpose', '').lower():
         APP_PREVIEW_REGISTRY[correlation_key] = ('WhatsApp', time.time())
-        return "App preview handshake verified.", 200
+        return "Handshake registered", 200
     elif 'facebookexternalhit' in user_agent:
         APP_PREVIEW_REGISTRY[correlation_key] = ('Facebook', time.time())
-        return "App preview handshake verified.", 200
+        return "Handshake registered", 200
     elif 'telegrambot' in user_agent:
         APP_PREVIEW_REGISTRY[correlation_key] = ('Telegram', time.time())
-        return "App preview handshake verified.", 200
+        return "Handshake registered", 200
     elif any(bot in user_agent for bot in BOT_SIGNATURES):
-        return "System background crawler signature filtered.", 200
+        return "System background crawler filter activated.", 200
 
+    # 2. Inject browser authorization variables to bypass the free-tier warning screen automatically
     is_bypass_check = request.args.get('bypass')
-    if not is_bypass_check:
-        detected_source = identify_traffic_origin(request, link['id'], visitor_ip)
-        db.execute('INSERT INTO tracking_history (link_id, detected_platform, ip_address) VALUES (?, ?, ?)',
-                   (link['id'], detected_source, visitor_ip))
-        db.commit()
-    else:
-        return "Handshake bypass complete.", 200
-    
+    if is_bypass_check:
+        return "Verification tokens validated.", 200
+        
+    detected_source = identify_traffic_origin(request, link['id'], visitor_ip)
+    db.execute('INSERT INTO tracking_history (link_id, detected_platform, ip_address) VALUES (?, ?, ?)',
+               (link['id'], detected_source, visitor_ip))
+    db.commit()
     APP_PREVIEW_REGISTRY.pop(correlation_key, None)
     
-    # Interstitial JS mitigation redirect page to skip Ngrok's intermediate warning screen
     html_bypass = f'''
     <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
     <script>
