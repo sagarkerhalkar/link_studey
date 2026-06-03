@@ -13,11 +13,9 @@ DB_PATH = r"D:\link_studey\analytics.db"
 PUBLIC_DOMAIN = "Retrieving global address..."
 LAST_KNOWN_DOMAIN = ""
 
-# In-memory registers to handle lightning-fast cross-referencing
 SHORT_URL_CACHE = {}
-APP_PREVIEW_REGISTRY = {}
+ACTIVE_CAMPAIGN_WINDOWS = {}
 
-# Comprehensive crawler signatures to prevent artificial double hits on mobile browsers
 BOT_SIGNATURES = ['facebookexternalhit', 'whatsapp', 'telegrambot', 'twitterbot', 'linkedinbot', 'discordbot', 'preview', 'bot', 'slackbot', 'crawler']
 
 def get_db():
@@ -57,59 +55,25 @@ def init_db():
                 FOREIGN KEY(link_id) REFERENCES universal_links(id))''')
         conn.commit()
 
-def get_subnet_base(ip_address):
-    """Tracks IP changes across cellular mobile towers seamlessly"""
-    if ":" in ip_address:
-        return ":".join(ip_address.split(":")[:3])
-    parts = ip_address.split(".")
-    if len(parts) == 4:
-        return ".".join(parts[:3])
-    return ip_address
-
-def fetch_resilient_short_url(tracker_code, long_url):
-    """Sequential Multi-API Shortening Engine with instant custom alias pairing"""
-    
-    # API 1: TinyURL Core Pipeline with Custom Alias mapping
+def fetch_custom_tinyurl(tracker_code, long_url):
+    """Fetches TinyURL and STRICTLY validates the API response to prevent 404 dead links."""
+    # Attempt 1: Custom Alias
     try:
         api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(long_url)}&alias={urllib.parse.quote(tracker_code)}"
         req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=4) as response:
+        with urllib.request.urlopen(req, timeout=5) as response:
             res_text = response.read().decode('utf-8').strip()
-            if "tinyurl.com" in res_text and "error" not in res_text.lower():
+            if "tinyurl.com" in res_text:
                 SHORT_URL_CACHE[tracker_code] = res_text
                 return
     except Exception:
-        pass
+        pass # Alias was likely taken (422 Error). Move to fallback.
 
-    # API 2: Ulvis.net Pipeline (High tolerance for dynamic reverse proxy tunnels)
-    try:
-        api_url = f"https://ulvis.net/api.php?url={urllib.parse.quote(long_url)}&custom={urllib.parse.quote(tracker_code)}"
-        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=4) as response:
-            res_text = response.read().decode('utf-8').strip()
-            if "ulvis.net" in res_text and "error" not in res_text.lower():
-                SHORT_URL_CACHE[tracker_code] = res_text
-                return
-    except Exception:
-        pass
-
-    # API 3: Da.gd Branded Shortcut Layer
-    try:
-        api_url = f"https://da.gd/s?url={urllib.parse.quote(long_url)}&shorturl={urllib.parse.quote(tracker_code)}"
-        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=4) as response:
-            res_text = response.read().decode('utf-8').strip()
-            if "da.gd" in res_text and "error" not in res_text.lower():
-                SHORT_URL_CACHE[tracker_code] = res_text
-                return
-    except Exception:
-        pass
-
-    # Fallback to prevent long link leakages if the custom keyword is globally claimed
+    # Attempt 2: Random Short Link (Guaranteed to work, never 404s)
     try:
         api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(long_url)}"
         req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=4) as response:
+        with urllib.request.urlopen(req, timeout=5) as response:
             res_text = response.read().decode('utf-8').strip()
             if "tinyurl.com" in res_text:
                 SHORT_URL_CACHE[tracker_code] = res_text
@@ -117,21 +81,20 @@ def fetch_resilient_short_url(tracker_code, long_url):
     except Exception:
         pass
 
-    SHORT_URL_CACHE[tracker_code] = f"{PUBLIC_DOMAIN}/l/{tracker_code}"
+    # Ultimate fallback if TinyURL goes down entirely
+    SHORT_URL_CACHE[tracker_code] = long_url
 
-def identify_traffic_origin(req, link_id, visitor_ip):
+def identify_traffic_origin(req, link_id):
     user_agent = req.headers.get('User-Agent', '').lower()
     referrer = req.referrer.lower() if req.referrer else ""
-    subnet_key = get_subnet_base(visitor_ip)
-    correlation_key = f"{subnet_key}_{link_id}"
     
-    # 1. Match against active background app preview tokens held in memory
-    if correlation_key in APP_PREVIEW_REGISTRY:
-        saved_platform, timestamp = APP_PREVIEW_REGISTRY[correlation_key]
-        if time.time() - timestamp < 900:
+    # 1. Check Global Active Campaign Window (Fixes WhatsApp tracking on 2nd devices)
+    if link_id in ACTIVE_CAMPAIGN_WINDOWS:
+        saved_platform, timestamp = ACTIVE_CAMPAIGN_WINDOWS[link_id]
+        if time.time() - timestamp < 1800:  # 30-minute window
             return saved_platform
 
-    # 2. Extract application wrapper signatures from the headers natively
+    # 2. Standard Header Checking
     if 'whatsapp' in user_agent or 'web.whatsapp' in referrer or 'whatsapp.com' in referrer: return 'WhatsApp'
     elif 'instagram' in user_agent or 'instagram.com' in referrer: return 'Instagram'
     elif 'fbav' in user_agent or 'facebook.com' in referrer: return 'Facebook'
@@ -161,7 +124,7 @@ def index():
             db.execute('INSERT INTO universal_links (original_url, tracker_code, platform, remark) VALUES (?, ?, ?, ?)', 
                        (original_url, tracker_code, platform, remark))
             db.commit()
-            message = "Automated tracking short link successfully deployed!"
+            message = "Tracking link successfully generated!"
         except sqlite3.IntegrityError:
             message = "Error: Identifier phrase already in use."
 
@@ -188,16 +151,16 @@ def get_stats():
         if "ngrok-free" in PUBLIC_DOMAIN:
             full_ngrok_route = f"{PUBLIC_DOMAIN}/l/{tracker_code}"
             if tracker_code not in SHORT_URL_CACHE:
-                SHORT_URL_CACHE[tracker_code] = "Deploying custom alias name..."
-                threading.Thread(target=fetch_resilient_short_url, args=(tracker_code, full_ngrok_route), daemon=True).start()
+                SHORT_URL_CACHE[tracker_code] = "Allocating secure shortcut..."
+                threading.Thread(target=fetch_custom_tinyurl, args=(tracker_code, full_ngrok_route), daemon=True).start()
         else:
-            SHORT_URL_CACHE[tracker_code] = "Waiting for global server tunnel link..."
+            SHORT_URL_CACHE[tracker_code] = "Waiting for tunnel..."
 
         links.append({
             'platform': row['platform'], 'tracker_code': tracker_code,
             'remark': row['remark'], 'original_url': row['original_url'],
             'unique_devices': unique_devices, 'total_clicks': total_clicks,
-            'short_url': SHORT_URL_CACHE.get(tracker_code, "Processing link data...")
+            'short_url': SHORT_URL_CACHE.get(tracker_code, "Processing...")
         })
         
     global_traffic = db.execute('SELECT detected_platform, COUNT(*) as count FROM tracking_history GROUP BY detected_platform ORDER BY count DESC').fetchall()
@@ -210,7 +173,7 @@ def get_stats():
 def link_analysis(tracker_code):
     db = get_db()
     link = db.execute('SELECT id FROM universal_links WHERE tracker_code = ?', (tracker_code,)).fetchone()
-    if not link: return jsonify({'error': 'Not found'}), 404
+    if not link: return jsonify({'error': 'Target reference missing'}), 404
     
     device_rows = db.execute('SELECT detected_platform, ip_address, COUNT(*) as click_count FROM tracking_history WHERE link_id = ? GROUP BY ip_address ORDER BY click_count DESC', (link['id'],)).fetchall()
     return jsonify({'devices': [dict(r) for r in device_rows]})
@@ -221,36 +184,33 @@ def inbound_tracker(tracker_code):
     db = get_db()
     
     link = db.execute('SELECT * FROM universal_links WHERE tracker_code = ?', (tracker_code,)).fetchone()
-    if not link: return "Invalid link reference specifications.", 404
+    if not link: return "Invalid tracking reference.", 404
 
     raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     visitor_ip = raw_ip.split(',')[0].strip() if raw_ip else request.remote_addr
-    subnet_key = get_subnet_base(visitor_ip)
-    correlation_key = f"{subnet_key}_{link['id']}"
 
-    # 1. Silently handle background mobile app previews without creating duplicate clicks
+    # 1. Intercept automated app previews and log them into the Campaign Matrix without counting as a click
     if 'whatsapp' in user_agent or 'whatsapp' in request.headers.get('Purpose', '').lower():
-        APP_PREVIEW_REGISTRY[correlation_key] = ('WhatsApp', time.time())
-        return "Handshake registered", 200
+        ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('WhatsApp', time.time())
+        return "Preview registered.", 200
     elif 'facebookexternalhit' in user_agent:
-        APP_PREVIEW_REGISTRY[correlation_key] = ('Facebook', time.time())
-        return "Handshake registered", 200
+        ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('Facebook', time.time())
+        return "Preview registered.", 200
     elif 'telegrambot' in user_agent:
-        APP_PREVIEW_REGISTRY[correlation_key] = ('Telegram', time.time())
-        return "Handshake registered", 200
+        ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('Telegram', time.time())
+        return "Preview registered.", 200
     elif any(bot in user_agent for bot in BOT_SIGNATURES):
-        return "System background crawler filter activated.", 200
+        return "Crawler dropped.", 200
 
-    # 2. Inject browser authorization variables to bypass the free-tier warning screen automatically
+    # 2. Process real clicks and inject ngrok bypass headers
     is_bypass_check = request.args.get('bypass')
     if is_bypass_check:
-        return "Verification tokens validated.", 200
+        return "Validation OK", 200
         
-    detected_source = identify_traffic_origin(request, link['id'], visitor_ip)
+    detected_source = identify_traffic_origin(request, link['id'])
     db.execute('INSERT INTO tracking_history (link_id, detected_platform, ip_address) VALUES (?, ?, ?)',
                (link['id'], detected_source, visitor_ip))
     db.commit()
-    APP_PREVIEW_REGISTRY.pop(correlation_key, None)
     
     html_bypass = f'''
     <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">

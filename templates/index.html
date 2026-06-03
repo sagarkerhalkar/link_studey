@@ -29,7 +29,6 @@
 <body>
 
     <h2>📊 NEXT TOPPERS LINK STUDY AUTOMATED DASHBOARD</h2>
-    <!-- VERBATIM BINDING FILE REFERENCE ASSIGNMENT: PROJECT link study_33.docx -->
     {% if message %}<div class="alert">✅ {{ message }}</div>{% endif %}
 
     <div class="grid-container">
@@ -87,7 +86,7 @@
                         <th>Identifier</th>
                         <th>Remark</th>
                         <th>Original URL</th>
-                        <th>Automated Branded Short Link (Bitly-Style)</th>
+                        <th>Automated Branded Short Link</th>
                         <th>Devices</th>
                         <th>Total Click</th>
                     </tr>
@@ -126,8 +125,8 @@
         }
 
         function copyUrl(urlText) {
-            if(urlText.includes("Deploying") || urlText.includes("Waiting") || urlText.includes("Processing")) {
-                alert("⚠️ Please wait, the automated API shortener is configuring the branded custom link phrase.");
+            if(urlText.includes("Allocating") || urlText.includes("Waiting") || urlText.includes("Processing")) {
+                alert("⚠️ Please wait for the API shortener to finish.");
                 return;
             }
             const tempInput = document.createElement("textarea");
@@ -136,7 +135,7 @@
             tempInput.select();
             document.execCommand("copy");
             document.body.removeChild(tempInput);
-            alert(`✅ Branded custom short link copied cleanly to your clipboard!`);
+            alert(`✅ Link copied to clipboard!`);
         }
 
         function filterTable() {
@@ -155,7 +154,7 @@
                     tbody.innerHTML = ""; 
                     data.links.forEach(link => {
                         let linkDisplayHTML = "";
-                        if(link.short_url.includes("Deploying") || link.short_url.includes("Waiting") || link.short_url.includes("Processing")) {
+                        if(link.short_url.includes("Allocating") || link.short_url.includes("Waiting") || link.short_url.includes("Processing")) {
                             linkDisplayHTML = `<span class="loading-badge">⏳ ${link.short_url}</span>`;
                         } else {
                             linkDisplayHTML = `
@@ -200,7 +199,7 @@
         fetchLiveStats();
 
         function openModal(trackerCode) {
-            document.getElementById('modalTitle').innerText = "Detailed Audit Log Footprint Ledger: " + trackerCode;
+            document.getElementById('modalTitle').innerText = "Detailed Audit Log: " + trackerCode;
             fetch('/api/analysis/' + trackerCode)
                 .then(res => res.json())
                 .then(data => {
