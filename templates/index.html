@@ -86,7 +86,7 @@
                         <th>Identifier</th>
                         <th>Remark</th>
                         <th>Original URL</th>
-                        <th>Automated Branded Short Link</th>
+                        <th>Automated Branded Short Link (Bitly-Style)</th>
                         <th>Devices</th>
                         <th>Total Click</th>
                     </tr>
@@ -159,7 +159,7 @@
                         } else {
                             linkDisplayHTML = `
                                 <span style="font-family: monospace; font-size:14px; color:#10b981; font-weight:bold; display:block;">${link.short_url}</span>
-                                <button class="btn-copy" onclick="copyUrl('${link.short_url}')">Copy Short Link</button>
+                                <button class="btn-copy" onclick="copyUrl('${link.short_url}')">Copy Link</button>
                             `;
                         }
                         

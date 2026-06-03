@@ -16,7 +16,7 @@ LAST_KNOWN_DOMAIN = ""
 SHORT_URL_CACHE = {}
 ACTIVE_CAMPAIGN_WINDOWS = {}
 
-BOT_SIGNATURES = ['facebookexternalhit', 'whatsapp', 'telegrambot', 'twitterbot', 'linkedinbot', 'discordbot', 'preview', 'bot', 'slackbot', 'crawler']
+BOT_SIGNATURES = ['facebookexternalhit', 'whatsapp', 'telegrambot', 'twitterbot', 'linkedinbot', 'discordbot', 'preview', 'bot', 'slackbot', 'crawler', 'instagram']
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -56,7 +56,8 @@ def init_db():
         conn.commit()
 
 def fetch_custom_tinyurl(tracker_code, long_url):
-    """Fetches TinyURL and STRICTLY validates the API response to prevent 404 dead links."""
+    """Secures custom aliases securely. NO FAKE STRINGS GENERATED TO PREVENT 404s."""
+    
     # Attempt 1: Custom Alias
     try:
         api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(long_url)}&alias={urllib.parse.quote(tracker_code)}"
@@ -67,11 +68,12 @@ def fetch_custom_tinyurl(tracker_code, long_url):
                 SHORT_URL_CACHE[tracker_code] = res_text
                 return
     except Exception:
-        pass # Alias was likely taken (422 Error). Move to fallback.
+        pass 
 
-    # Attempt 2: Random Short Link (Guaranteed to work, never 404s)
+    # Attempt 2: Branded Suffix
     try:
-        api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(long_url)}"
+        branded_alias = f"{tracker_code}-nxt"
+        api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(long_url)}&alias={urllib.parse.quote(branded_alias)}"
         req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=5) as response:
             res_text = response.read().decode('utf-8').strip()
@@ -81,27 +83,27 @@ def fetch_custom_tinyurl(tracker_code, long_url):
     except Exception:
         pass
 
-    # Ultimate fallback if TinyURL goes down entirely
+    # SAFE FALLBACK: If API rejects all custom names, return the raw URL. NEVER create a fake link.
     SHORT_URL_CACHE[tracker_code] = long_url
 
 def identify_traffic_origin(req, link_id):
     user_agent = req.headers.get('User-Agent', '').lower()
     referrer = req.referrer.lower() if req.referrer else ""
     
-    # 1. Check Global Active Campaign Window (Fixes WhatsApp tracking on 2nd devices)
+    # 1. Global Campaign Window 
     if link_id in ACTIVE_CAMPAIGN_WINDOWS:
         saved_platform, timestamp = ACTIVE_CAMPAIGN_WINDOWS[link_id]
-        if time.time() - timestamp < 1800:  # 30-minute window
+        if time.time() - timestamp < 1800:  
             return saved_platform
 
-    # 2. Standard Header Checking
+    # 2. Fully Patched Native Headers (Includes Web/Desktop variations)
     if 'whatsapp' in user_agent or 'web.whatsapp' in referrer or 'whatsapp.com' in referrer: return 'WhatsApp'
     elif 'instagram' in user_agent or 'instagram.com' in referrer: return 'Instagram'
     elif 'fbav' in user_agent or 'facebook.com' in referrer: return 'Facebook'
-    elif 'telegram' in user_agent or 't.me' in referrer: return 'Telegram'
+    elif 'telegram' in user_agent or 't.me' in referrer or 'web.telegram' in referrer: return 'Telegram'
     elif 'linkedin' in user_agent or 'linkedin.com' in referrer: return 'LinkedIn'
     elif 'discord' in user_agent or 'discord.com' in referrer: return 'Discord'
-    elif 'twitter' in user_agent or 'x.com' in referrer: return 'X (Twitter)'
+    elif 'twitter' in user_agent or 'x.com' in referrer or 't.co' in referrer: return 'X (Twitter)'
     
     return 'Direct Link / Web Browser'
 
@@ -124,7 +126,7 @@ def index():
             db.execute('INSERT INTO universal_links (original_url, tracker_code, platform, remark) VALUES (?, ?, ?, ?)', 
                        (original_url, tracker_code, platform, remark))
             db.commit()
-            message = "Tracking link successfully generated!"
+            message = "Automated tracking short link successfully deployed!"
         except sqlite3.IntegrityError:
             message = "Error: Identifier phrase already in use."
 
@@ -189,20 +191,22 @@ def inbound_tracker(tracker_code):
     raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     visitor_ip = raw_ip.split(',')[0].strip() if raw_ip else request.remote_addr
 
-    # 1. Intercept automated app previews and log them into the Campaign Matrix without counting as a click
+    # 1. Intercept automated app previews 
     if 'whatsapp' in user_agent or 'whatsapp' in request.headers.get('Purpose', '').lower():
         ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('WhatsApp', time.time())
         return "Preview registered.", 200
+    elif 'instagram' in user_agent:
+        ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('Instagram', time.time())
     elif 'facebookexternalhit' in user_agent:
         ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('Facebook', time.time())
         return "Preview registered.", 200
     elif 'telegrambot' in user_agent:
         ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('Telegram', time.time())
         return "Preview registered.", 200
-    elif any(bot in user_agent for bot in BOT_SIGNATURES):
+    elif any(bot in user_agent for bot in BOT_SIGNATURES) and 'instagram' not in user_agent:
         return "Crawler dropped.", 200
 
-    # 2. Process real clicks and inject ngrok bypass headers
+    # 2. Process real clicks 
     is_bypass_check = request.args.get('bypass')
     if is_bypass_check:
         return "Validation OK", 200
