@@ -12,7 +12,8 @@
         input, select { padding: 10px 15px; margin: 6px 0 15px 0; border: 1px solid #ced4da; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
         .search-bar { width: 100%; max-width: 400px; margin-bottom: 15px; padding: 12px; border-radius: 8px; border: 1px solid #007bff; }
         button.btn-main { background: #0b194f; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; width: 100%;}
-        button.btn-copy { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; margin-top: 5px;}
+        button.btn-copy, button.btn-csv { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; margin-top: 5px;}
+        button.btn-csv { background: #3b82f6; float: right; margin-top: 0;}
         table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left; }
         th, td { padding: 14px; border-bottom: 1px solid #edf2f7; font-size: 14px; vertical-align: middle;}
         th { background: #f8f9fa; color: #4a5568; font-weight: 600; white-space: nowrap;}
@@ -58,7 +59,10 @@
         </div>
 
         <div class="box">
-            <h3>🌍 Global Platform Traffic Overview (Leaderboard)</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; margin-bottom: 10px;">
+                <h3 style="margin:0; border:none; padding:0;">🌍 Global Platform Traffic Overview (Leaderboard)</h3>
+                <button class="btn-csv" onclick="downloadGlobalCSV()">Download CSV</button>
+            </div>
             <div class="table-container" style="height: 340px; margin-top:0;">
                 <table>
                     <thead>
@@ -100,14 +104,17 @@
     <div id="analysisModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h3 id="modalTitle" style="margin-top:0; color:#0b194f;"></h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; margin-bottom: 10px;">
+                <h3 id="modalTitle" style="margin:0; color:#0b194f; border:none; padding:0;"></h3>
+                <button class="btn-csv" onclick="downloadCSV()">Download CSV</button>
+            </div>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Platform Source</th>
                             <th>Device Name or IP Address</th>
-                            <th style="text-align: center;">Clicks Logged</th>
+                            <th>Platform Source</th>
+                            <th style="text-align: center;">Click</th>
                         </tr>
                     </thead>
                     <tbody id="modalTableBody"></tbody>
@@ -117,6 +124,10 @@
     </div>
 
     <script>
+        let currentModalData = [];
+        let globalTableData = [];
+        let currentTrackerCode = "";
+
         function toggleCustomPlatform() {
             const select = document.getElementById("platformSelect");
             const customInput = document.getElementById("customPlatformInput");
@@ -181,6 +192,7 @@
 
                     const gbody = document.getElementById('globalTableBody');
                     gbody.innerHTML = "";
+                    globalTableData = data.global_table;
                     if(data.global_table.length === 0) {
                         gbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#94a3b8; padding: 20px;">No incoming traffic profiles recorded.</td></tr>';
                     } else {
@@ -199,10 +211,12 @@
         fetchLiveStats();
 
         function openModal(trackerCode) {
+            currentTrackerCode = trackerCode;
             document.getElementById('modalTitle').innerText = "Detailed Audit Log: " + trackerCode;
             fetch('/api/analysis/' + trackerCode)
                 .then(res => res.json())
                 .then(data => {
+                    currentModalData = data.devices;
                     const tbody = document.getElementById('modalTableBody');
                     tbody.innerHTML = "";
                     let totalSum = 0;
@@ -211,8 +225,8 @@
                         totalSum += dev.click_count;
                         tbody.innerHTML += `
                             <tr>
-                                <td><strong>${dev.detected_platform}</strong></td>
                                 <td style="font-family: monospace; color: #475569;">${dev.ip_address}</td>
+                                <td><strong>${dev.detected_platform}</strong></td>
                                 <td style="text-align: center;"><strong style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${dev.click_count}</strong></td>
                             </tr>`;
                     });
@@ -226,6 +240,35 @@
                     document.getElementById('analysisModal').style.display = "block";
                 });
         }
+        
+        function downloadCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Device Name or IP address,Platform Source,Click\n";
+            currentModalData.forEach(function(rowArray) {
+                let row = rowArray.ip_address + "," + rowArray.detected_platform + "," + rowArray.click_count;
+                csvContent += row + "\r\n";
+            });
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", currentTrackerCode + "_analysis.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        function downloadGlobalCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Traffic Source Platform,Total Network Hits\n";
+            globalTableData.forEach(function(rowArray) {
+                let row = rowArray.platform + "," + rowArray.count;
+                csvContent += row + "\r\n";
+            });
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "global_traffic_leaderboard.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
         function closeModal() { document.getElementById('analysisModal').style.display = "none"; }
     </script>
 </body>

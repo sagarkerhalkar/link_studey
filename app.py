@@ -16,7 +16,7 @@ LAST_KNOWN_DOMAIN = ""
 SHORT_URL_CACHE = {}
 ACTIVE_CAMPAIGN_WINDOWS = {}
 
-BOT_SIGNATURES = ['facebookexternalhit', 'whatsapp', 'telegrambot', 'twitterbot', 'linkedinbot', 'discordbot', 'preview', 'bot', 'slackbot', 'crawler', 'instagram']
+BOT_SIGNATURES = ['facebookexternalhit', 'whatsapp', 'telegrambot', 'twitterbot', 'linkedinbot', 'discordbot', 'preview', 'bot', 'slackbot', 'crawler', 'instagram', 'googlebot']
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -36,7 +36,7 @@ def init_db():
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('CREATE TABLE IF NOT EXISTS custom_platforms (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL)')
-        for p in ['YouTube', 'Instagram', 'Facebook', 'Telegram', 'WhatsApp', 'X (Twitter)', 'LinkedIn', 'Other']:
+        for p in ['YouTube', 'Instagram', 'Facebook', 'Telegram', 'WhatsApp', 'X (Twitter)', 'LinkedIn', 'Google Chat', 'Discord', 'Other']:
             try: cursor.execute('INSERT INTO custom_platforms (name) VALUES (?)', (p,))
             except sqlite3.IntegrityError: pass
 
@@ -56,9 +56,7 @@ def init_db():
         conn.commit()
 
 def fetch_custom_tinyurl(tracker_code, long_url):
-    """Secures custom aliases securely. NO FAKE STRINGS GENERATED TO PREVENT 404s."""
-    
-    # Attempt 1: Custom Alias
+    """Secures custom aliases securely without generating fake 404 links."""
     try:
         api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(long_url)}&alias={urllib.parse.quote(tracker_code)}"
         req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -70,7 +68,6 @@ def fetch_custom_tinyurl(tracker_code, long_url):
     except Exception:
         pass 
 
-    # Attempt 2: Branded Suffix
     try:
         branded_alias = f"{tracker_code}-nxt"
         api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(long_url)}&alias={urllib.parse.quote(branded_alias)}"
@@ -83,29 +80,44 @@ def fetch_custom_tinyurl(tracker_code, long_url):
     except Exception:
         pass
 
-    # SAFE FALLBACK: If API rejects all custom names, return the raw URL. NEVER create a fake link.
     SHORT_URL_CACHE[tracker_code] = long_url
 
-def identify_traffic_origin(req, link_id):
+def get_subnet_base(ip_address):
+    """Isolates network traffic to prevent platform cross-contamination"""
+    if ":" in ip_address: return ":".join(ip_address.split(":")[:3])
+    parts = ip_address.split(".")
+    if len(parts) == 4: return ".".join(parts[:3])
+    return ip_address
+
+def identify_traffic_origin(req, link_id, visitor_ip):
     user_agent = req.headers.get('User-Agent', '').lower()
     referrer = req.referrer.lower() if req.referrer else ""
+    subnet_key = get_subnet_base(visitor_ip)
     
-    # 1. Global Campaign Window 
-    if link_id in ACTIVE_CAMPAIGN_WINDOWS:
-        saved_platform, timestamp = ACTIVE_CAMPAIGN_WINDOWS[link_id]
-        if time.time() - timestamp < 1800:  
-            return saved_platform
-
-    # 2. Fully Patched Native Headers (Includes Web/Desktop variations)
-    if 'whatsapp' in user_agent or 'web.whatsapp' in referrer or 'whatsapp.com' in referrer: return 'WhatsApp'
+    # 1. EXPLICIT HEADER DETECTION
+    if 'whatsapp' in user_agent or 'web.whatsapp' in referrer or 'whatsapp.com' in referrer or 'wa.me' in referrer: return 'WhatsApp'
     elif 'instagram' in user_agent or 'instagram.com' in referrer: return 'Instagram'
-    elif 'fbav' in user_agent or 'facebook.com' in referrer: return 'Facebook'
-    elif 'telegram' in user_agent or 't.me' in referrer or 'web.telegram' in referrer: return 'Telegram'
+    elif 'fbav' in user_agent or 'facebook.com' in referrer or 'fban' in user_agent: return 'Facebook'
+    elif 'telegram' in user_agent or 't.me' in referrer or 'web.telegram' in referrer or 'telegram.org' in referrer: return 'Telegram'
     elif 'linkedin' in user_agent or 'linkedin.com' in referrer: return 'LinkedIn'
     elif 'discord' in user_agent or 'discord.com' in referrer: return 'Discord'
     elif 'twitter' in user_agent or 'x.com' in referrer or 't.co' in referrer: return 'X (Twitter)'
+    elif 'googlechat' in user_agent or 'chat.google' in referrer or 'mail.google' in referrer or 'hangouts' in user_agent: return 'Google Chat'
     
-    return 'Direct Link / Web Browser'
+    # 2. SUBNET CAMPAIGN WINDOW (Local Fallback for Scrubbed Headers)
+    ip_key = f"{subnet_key}_{link_id}"
+    if ip_key in ACTIVE_CAMPAIGN_WINDOWS:
+        saved_platform, timestamp = ACTIVE_CAMPAIGN_WINDOWS[ip_key]
+        if time.time() - timestamp < 1800:  
+            return saved_platform
+
+    # 3. GLOBAL CAMPAIGN WINDOW (Final Fallback for Meta Bots)
+    if link_id in ACTIVE_CAMPAIGN_WINDOWS:
+        saved_platform, timestamp = ACTIVE_CAMPAIGN_WINDOWS[link_id]
+        if time.time() - timestamp < 600: # Tight 10-minute fallback to prevent overwrite  
+            return saved_platform
+
+    return 'Other / Direct Browser'
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -177,7 +189,7 @@ def link_analysis(tracker_code):
     link = db.execute('SELECT id FROM universal_links WHERE tracker_code = ?', (tracker_code,)).fetchone()
     if not link: return jsonify({'error': 'Target reference missing'}), 404
     
-    device_rows = db.execute('SELECT detected_platform, ip_address, COUNT(*) as click_count FROM tracking_history WHERE link_id = ? GROUP BY ip_address ORDER BY click_count DESC', (link['id'],)).fetchall()
+    device_rows = db.execute('SELECT ip_address, detected_platform, COUNT(*) as click_count FROM tracking_history WHERE link_id = ? GROUP BY ip_address, detected_platform ORDER BY click_count DESC', (link['id'],)).fetchall()
     return jsonify({'devices': [dict(r) for r in device_rows]})
 
 @app.route('/l/<tracker_code>')
@@ -190,20 +202,25 @@ def inbound_tracker(tracker_code):
 
     raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     visitor_ip = raw_ip.split(',')[0].strip() if raw_ip else request.remote_addr
+    subnet_key = get_subnet_base(visitor_ip)
+    ip_key = f"{subnet_key}_{link['id']}"
 
-    # 1. Intercept automated app previews 
-    if 'whatsapp' in user_agent or 'whatsapp' in request.headers.get('Purpose', '').lower():
-        ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('WhatsApp', time.time())
-        return "Preview registered.", 200
-    elif 'instagram' in user_agent:
-        ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('Instagram', time.time())
-    elif 'facebookexternalhit' in user_agent:
-        ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('Facebook', time.time())
-        return "Preview registered.", 200
-    elif 'telegrambot' in user_agent:
-        ACTIVE_CAMPAIGN_WINDOWS[link['id']] = ('Telegram', time.time())
-        return "Preview registered.", 200
-    elif any(bot in user_agent for bot in BOT_SIGNATURES) and 'instagram' not in user_agent:
+    # 1. Intercept automated app previews
+    platform = None
+    if 'whatsapp' in user_agent or 'whatsapp' in request.headers.get('Purpose', '').lower(): platform = 'WhatsApp'
+    elif 'instagram' in user_agent: platform = 'Instagram'
+    elif 'facebookexternalhit' in user_agent: platform = 'Facebook'
+    elif 'telegrambot' in user_agent: platform = 'Telegram'
+    elif 'googlebot' in user_agent: platform = 'Google Chat'
+    elif 'twitterbot' in user_agent: platform = 'X (Twitter)'
+    elif 'discordbot' in user_agent: platform = 'Discord'
+    
+    if platform:
+        ACTIVE_CAMPAIGN_WINDOWS[ip_key] = (platform, time.time())
+        ACTIVE_CAMPAIGN_WINDOWS[link['id']] = (platform, time.time())
+        if platform != 'Instagram': # Allow IG through to track correctly
+            return "Preview registered.", 200
+    elif any(bot in user_agent for bot in BOT_SIGNATURES):
         return "Crawler dropped.", 200
 
     # 2. Process real clicks 
@@ -211,7 +228,7 @@ def inbound_tracker(tracker_code):
     if is_bypass_check:
         return "Validation OK", 200
         
-    detected_source = identify_traffic_origin(request, link['id'])
+    detected_source = identify_traffic_origin(request, link['id'], visitor_ip)
     db.execute('INSERT INTO tracking_history (link_id, detected_platform, ip_address) VALUES (?, ?, ?)',
                (link['id'], detected_source, visitor_ip))
     db.commit()
