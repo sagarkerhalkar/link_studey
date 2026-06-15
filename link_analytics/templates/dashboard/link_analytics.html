@@ -1,0 +1,181 @@
+{% extends 'dashboard/layout.html' %}
+{% block title %}{{ link.custom_tag }} analytics — {{ app_name }}{% endblock %}
+{% block topbar %}Link analytics{% endblock %}
+{% block content %}
+<div class="analytics-v42" data-live-analytics data-live-url="{{ url_for('link_analytics_live', link_id=link.id) }}">
+  <section class="page-heading analytics-heading analytics-commandbar">
+    <div class="analytics-title-block">
+      <span class="eyebrow">Global traffic intelligence</span>
+      <h1>{{ link.custom_tag }}</h1>
+      <div class="short-link-line">
+        <a href="{{ link.short_url }}" target="_blank" rel="noopener">{{ link.short_url }}</a>
+        <button class="copy-mini" type="button" data-copy="{{ link.short_url }}">Copy short URL</button>
+      </div>
+      <p class="destination-line">Redirects to <span>{{ link.long_url }}</span></p>
+      <div class="live-indicator"><i></i><span data-live-status>Connecting live analytics…</span></div>
+    </div>
+    <div class="heading-actions">
+      <a class="button button-secondary" href="{{ url_for('link_qr', link_id=link.id) }}">QR code</a>
+      <a class="button button-secondary" href="{{ url_for('export_link', link_id=link.id) }}">Export CSV</a>
+      {% if current_user.can_edit %}<a class="button button-primary" href="{{ url_for('edit_link', link_id=link.id) }}">Edit link</a>{% endif %}
+    </div>
+  </section>
+
+  {% if error %}
+  <div class="service-alert" data-live-error>
+    <div><strong>Historical Shlink data is temporarily unavailable</strong><p>New gateway tracking is still active. {{ error }}</p></div>
+    <a href="{{ url_for('integration_status') }}">Check integration</a>
+  </div>
+  {% endif %}
+
+  <section class="executive-metrics" aria-label="Executive traffic summary">
+    <article class="executive-card executive-primary">
+      <span>Verified clicks</span>
+      <strong data-live-value="total">{{ analytics.total }}</strong>
+      <small>Real browser clicks; previews excluded</small>
+    </article>
+    <article class="executive-card">
+      <span>Estimated devices</span>
+      <strong data-live-value="estimated_devices">{{ analytics.estimated_devices }}</strong>
+      <small>Cross-browser physical-device estimate</small>
+    </article>
+    <article class="executive-card">
+      <span>Repeat clicks</span>
+      <strong data-live-value="repeat_clicks">{{ analytics.repeat_clicks }}</strong>
+      <small>Clicks beyond the first per estimated device</small>
+    </article>
+    <article class="executive-card">
+      <span>Platform identified</span>
+      <strong data-live-value="platform_identification_rate">{{ analytics.platform_identification_rate }}%</strong>
+      <small>Confirmed or probable evidence</small>
+    </article>
+    <article class="executive-card">
+      <span>Browser identities</span>
+      <strong data-live-value="browser_identities">{{ analytics.browser_identities }}</strong>
+      <small>App WebViews and browsers before merging</small>
+    </article>
+    <article class="executive-card">
+      <span>Hidden source clicks</span>
+      <strong data-live-value="hidden_clicks">{{ analytics.hidden_clicks }}</strong>
+      <small>Launching app removed source evidence</small>
+    </article>
+  </section>
+
+  <section class="global-overview-grid">
+    <article class="panel global-overview-card traffic-overview">
+      <div class="panel-heading">
+        <div><span class="eyebrow">Traffic overview</span><h2>From request to real audience</h2></div>
+        <span class="scope-pill">Gateway v4.2</span>
+      </div>
+      <div class="traffic-funnel" data-live-funnel>
+        <div><span>All requests</span><strong data-funnel-value="all_requests">{{ analytics.all_requests }}</strong><i style="--funnel-width:100%"></i></div>
+        <div><span>Preview / bots</span><strong data-funnel-value="preview_requests">{{ analytics.preview_requests }}</strong><i></i></div>
+        <div><span>Incomplete</span><strong data-funnel-value="unverified_requests">{{ analytics.unverified_requests }}</strong><i></i></div>
+        <div class="funnel-success"><span>Verified clicks</span><strong data-funnel-value="total">{{ analytics.total }}</strong><i></i></div>
+        <div class="funnel-device"><span>Estimated devices</span><strong data-funnel-value="estimated_devices">{{ analytics.estimated_devices }}</strong><i></i></div>
+      </div>
+      <p class="panel-note">Preview services and collectors that did not finish are visible for audit, but never inflate clicks or device totals.</p>
+    </article>
+
+    <article class="panel global-overview-card identification-overview">
+      <div class="panel-heading"><div><span class="eyebrow">Source quality</span><h2>Platform identification</h2></div></div>
+      <div class="identification-visual">
+        <div class="quality-donut" data-live-donut style="--identified:{{ analytics.platform_identification_rate }}%">
+          <div><strong data-live-value="platform_identification_rate">{{ analytics.platform_identification_rate }}%</strong><span>identified</span></div>
+        </div>
+        <div class="snapshot-list">
+          <div><span>Top platform</span><strong data-live-value="top_platform">{{ analytics.top_platform }}</strong></div>
+          <div><span>Top device type</span><strong data-live-value="top_device">{{ analytics.top_device }}</strong></div>
+          <div><span>Top country</span><strong data-live-value="top_country">{{ analytics.top_country }}</strong></div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="analytics-insight-grid">
+    <article class="panel insight-card insight-wide">
+      <div class="panel-heading"><div><span class="eyebrow">Trend</span><h2>Verified clicks over time</h2></div><small class="muted">Live background refresh</small></div>
+      <div class="bar-chart global-bar-chart" data-live-chart="daily" data-chart='{{ analytics.daily|tojson }}'>{% if not analytics.daily %}<div class="chart-empty">Click data will appear here.</div>{% endif %}</div>
+    </article>
+
+    <article class="panel insight-card">
+      <div class="panel-heading"><div><span class="eyebrow">Platforms</span><h2>Where clicks came from</h2></div></div>
+      <div class="rank-list rank-list-global" data-live-rank="platforms">{% for label, value in analytics.platforms %}<div><span><b>{{ label }}</b><small>{{ value }} clicks</small></span><i style="--percent: {{ ((value / (analytics.human or 1)) * 100)|round(2) }}%"></i></div>{% else %}<p class="muted">No platform data yet.</p>{% endfor %}</div>
+    </article>
+
+    <article class="panel insight-card">
+      <div class="panel-heading"><div><span class="eyebrow">App vs web</span><h2>Click surface</h2></div></div>
+      <div class="rank-list rank-list-global" data-live-rank="surfaces">{% for label, value in analytics.surfaces %}<div><span><b>{{ label }}</b><small>{{ value }} clicks</small></span><i style="--percent: {{ ((value / (analytics.human or 1)) * 100)|round(2) }}%"></i></div>{% else %}<p class="muted">No surface data yet.</p>{% endfor %}</div>
+    </article>
+
+    <article class="panel insight-card">
+      <div class="panel-heading"><div><span class="eyebrow">Devices</span><h2>Audience device mix</h2></div></div>
+      <div class="rank-list rank-list-global" data-live-rank="devices">{% for label, value in analytics.devices %}<div><span><b>{{ label }}</b><small>{{ value }} clicks</small></span><i style="--percent: {{ ((value / (analytics.human or 1)) * 100)|round(2) }}%"></i></div>{% else %}<p class="muted">No device data yet.</p>{% endfor %}</div>
+    </article>
+
+    <article class="panel insight-card">
+      <div class="panel-heading"><div><span class="eyebrow">Operating systems</span><h2>OS mix</h2></div></div>
+      <div class="rank-list rank-list-global" data-live-rank="operating_systems">{% for label, value in analytics.operating_systems %}<div><span><b>{{ label }}</b><small>{{ value }} clicks</small></span><i style="--percent: {{ ((value / (analytics.human or 1)) * 100)|round(2) }}%"></i></div>{% else %}<p class="muted">No OS data yet.</p>{% endfor %}</div>
+    </article>
+
+    <article class="panel insight-card">
+      <div class="panel-heading"><div><span class="eyebrow">Browsers</span><h2>Browser mix</h2></div></div>
+      <div class="rank-list rank-list-global" data-live-rank="browsers">{% for label, value in analytics.browsers %}<div><span><b>{{ label }}</b><small>{{ value }} clicks</small></span><i style="--percent: {{ ((value / (analytics.human or 1)) * 100)|round(2) }}%"></i></div>{% else %}<p class="muted">No browser data yet.</p>{% endfor %}</div>
+    </article>
+
+    <article class="panel insight-card">
+      <div class="panel-heading"><div><span class="eyebrow">Countries</span><h2>Geographic reach</h2></div></div>
+      <div class="rank-list rank-list-global" data-live-rank="countries">{% for label, value in analytics.countries %}<div><span><b>{{ label }}</b><small>{{ value }} clicks</small></span><i style="--percent: {{ ((value / (analytics.human or 1)) * 100)|round(2) }}%"></i></div>{% else %}<p class="muted">Country appears when Cloudflare supplies it.</p>{% endfor %}</div>
+    </article>
+  </section>
+
+  <section class="panel device-audience-panel">
+    <div class="panel-heading">
+      <div><span class="eyebrow">Estimated physical devices</span><h2>One device, all its clicks and platforms</h2></div>
+      <div class="identity-summary"><strong data-live-value="estimated_devices">{{ analytics.estimated_devices }}</strong><span>devices from <b data-live-value="browser_identities">{{ analytics.browser_identities }}</b> browser/app identities</span></div>
+    </div>
+    <p class="panel-note">The estimate merges Chrome and in-app WebViews only when salted network, screen, touch and hardware signals agree. It never claims to read a MAC address.</p>
+    <div class="device-card-grid" data-live-device-cards>
+      {% for item in analytics.device_rows %}
+      <article class="device-audience-card">
+        <header><div><span class="device-id">{{ item.device_id }}</span><h3>{{ item.device_label }}{% if item.model %} · {{ item.model }}{% endif %}</h3></div><strong>{{ item.clicks }} clicks</strong></header>
+        <div class="device-card-stats"><span><b>{{ item.browser_identities }}</b> browser/app identities</span><span><b>{{ item.top_platform }}</b> top platform</span><span><b>{{ item.os }}</b> OS</span></div>
+        <div class="device-platform-list">{% for platform in item.platforms %}<span>{{ platform.label }} · {{ platform.clicks }}</span>{% endfor %}</div>
+        <footer><span>{{ item.identity_confidence }} estimate</span><span>{{ item.first_seen or 'Unknown' }} → {{ item.last_seen or 'Unknown' }}</span></footer>
+      </article>
+      {% else %}<p class="muted">No verified devices yet.</p>{% endfor %}
+    </div>
+  </section>
+
+  <section class="panel recent-clicks-panel">
+    <div class="panel-heading">
+      <div><span class="eyebrow">Latest verified clicks</span><h2>Evidence behind every result</h2></div>
+      <small class="muted">Hidden sources are shown honestly, never guessed.</small>
+    </div>
+    <div class="recent-click-list" data-live-recent-cards>
+      {% for visit in analytics.recent %}
+      <article class="recent-click-card">
+        <div class="recent-click-primary"><span class="confidence confidence-{{ visit.confidence|lower|replace(' ', '-') }}">{{ visit.confidence }}</span><h3>{{ visit.platform }}</h3><p>{{ visit.surface }}</p></div>
+        <div><span>Device</span><strong>{{ visit.device_label }}{% if visit.model %} · {{ visit.model }}{% endif %}</strong><small>{{ visit.device_id }}</small></div>
+        <div><span>Browser / OS</span><strong>{{ visit.browser }} · {{ visit.os }}</strong><small>{{ visit.city or visit.region or visit.country }}</small></div>
+        <div class="recent-evidence"><span>Why</span><strong>{{ visit.evidence }}</strong><small>{{ visit.date or 'Unknown' }}</small></div>
+      </article>
+      {% else %}<p class="muted">No verified clicks yet. Share {{ link.short_url }} and keep this page open.</p>{% endfor %}
+    </div>
+  </section>
+
+  <details class="panel methodology-panel">
+    <summary><span><b>Tracking method and data integrity</b><small>Open technical details</small></span></summary>
+    <div class="methodology-content">
+      <p><strong>One unchanged short URL:</strong> platform detection uses real request evidence only. Confirmed means direct package, in-app signature or referrer evidence. Probable means an identifiable app preview immediately preceded a hidden browser launch.</p>
+      <p><strong>Device calculation:</strong> version 4.2 separates browser/app identities from estimated physical devices. Cross-context merging needs multiple matching hardware signals and a salted network scope.</p>
+      <p><strong>Excluded traffic:</strong> {{ analytics.preview_requests }} preview/bot requests and {{ analytics.unverified_requests }} incomplete requests are not included in clicks, devices or repeat calculations.</p>
+      <p><strong>Historical records are separated:</strong> Shlink {{ analytics.legacy.shlink_total }}, local v2 {{ analytics.legacy.local_v2_events }}, local v3 {{ analytics.legacy.local_v3_events }}. These records remain outside current charts.</p>
+    </div>
+  </details>
+
+  {% if current_user.can_edit %}
+  <section class="panel danger-zone"><div><span class="eyebrow">Danger zone</span><h2>Delete this short link</h2><p>The branded URL will stop redirecting and its analytics will be removed.</p></div><form method="post" action="{{ url_for('delete_link', link_id=link.id) }}" data-confirm="Delete this short link permanently?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-danger" type="submit">Delete link</button></form></section>
+  {% endif %}
+</div>
+{% endblock %}

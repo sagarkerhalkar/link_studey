@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="refresh" content="1.5;url={{ destination }}">
+  <title>Opening link…</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tracker.css') }}">
+</head>
+<body
+  data-tracker-root
+  data-collect-url="{{ url_for('collect_tracking_event', click_token=click_token) }}"
+  data-destination="{{ destination }}"
+>
+  <main class="tracker-card" aria-live="polite">
+    <div class="tracker-logo">LA</div>
+    <div>
+      <strong>Opening secure link…</strong>
+      <small>Preparing the destination</small>
+    </div>
+    <span class="tracker-spinner" aria-hidden="true"></span>
+  </main>
+  <script src="{{ url_for('static', filename='js/tracker.js') }}" defer></script>
+</body>
+</html>

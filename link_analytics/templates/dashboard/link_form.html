@@ -1,0 +1,17 @@
+{% extends 'dashboard/layout.html' %}{% block title %}Create link — {{ app_name }}{% endblock %}{% block topbar %}Create link{% endblock %}
+{% block content %}
+<section class="page-heading compact"><div><span class="eyebrow">New branded link</span><h1>Create a short link</h1><p>Only two fields are required. Your tag becomes the exact final path.</p></div></section>
+<div class="form-layout">
+<form method="post" class="panel form-card" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="field"><label for="{{ form.destination_url.id }}">{{ form.destination_url.label.text }}</label>{{ form.destination_url(rows=4, placeholder='https://www.youtube.com/watch?v=...') }}<small>Paste the complete destination, including https://</small>{% for error in form.destination_url.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+  <div class="field"><label for="{{ form.custom_tag.id }}">{{ form.custom_tag.label.text }}</label><div class="url-input"><span>https://{{ short_domain }}/</span>{{ form.custom_tag(placeholder='8hb2kld', autocomplete='off') }}</div><small>Use 2–64 letters, numbers, hyphens, or underscores. The app will not add another code.</small>{% for error in form.custom_tag.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+  <div class="form-actions"><a class="button button-ghost" href="{{ url_for('links') }}">Cancel</a>{{ form.submit(class_='button button-primary') }}</div>
+</form>
+<aside class="panel preview-panel">
+  <span class="eyebrow">Live preview</span><h2>Your final link</h2>
+  <div class="short-preview"><span class="status-dot"></span><strong id="short-preview" data-base="https://{{ short_domain }}/">https://{{ short_domain }}/8hb2kld</strong></div>
+  <ul class="clean-list"><li><span>✓</span> Exact custom tag</li><li><span>✓</span> One link for every platform</li><li><span>✓</span> Automatic Shlink redirect tracking</li><li><span>✓</span> No <code>?src=</code> parameter</li></ul>
+</aside>
+</div>
+{% endblock %}

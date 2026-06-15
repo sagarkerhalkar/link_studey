@@ -1,0 +1,215 @@
+me="2026-06-15T06:55:12+05:30" level=warning msg="The \"SHLINK_DOMAIN\" variable is not set. Defaulting to a blank string."
+time="2026-06-15T06:55:12+05:30" level=warning msg="The \"SHLINK_DOMAIN\" variable is not set. Defaulting to a blank string."
+time="2026-06-15T06:55:12+05:30" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+PS D:\LinkAnalytics\Link_Analytics_Shlink_Global_Port_2331> Set-ExecutionPolicy -Scope Process Bypass
+PS D:\LinkAnalytics\Link_Analytics_Shlink_Global_Port_2331> .\start_windows.ps1
+============================================================
+ LINK ANALYTICS | DASHBOARD 2331 | SHLINK 2332
+============================================================
+Docker Desktop is ready.
+Created secure local .env configuration.
+Shlink host port 2332 is available.
+#1 [internal] load local bake definitions
+#1 reading from stdin 642B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 486B 0.0s done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/python:3.13-slim
+#3 ...
+
+#4 [auth] library/python:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.13-slim
+#3 DONE 2.8s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 117B done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 DONE 0.0s
+
+#7 [1/7] FROM docker.io/library/python:3.13-slim@sha256:c33f0bc4364a6881bed1ec0cc2665e6c53c87a43e774aaeab88e6f17af105e4f
+#7 resolve docker.io/library/python:3.13-slim@sha256:c33f0bc4364a6881bed1ec0cc2665e6c53c87a43e774aaeab88e6f17af105e4f 0.0s done
+#7 DONE 0.1s
+
+#6 [internal] load build context
+#6 transferring context: 225.47kB 0.0s done
+#6 DONE 0.0s
+
+#8 [2/7] WORKDIR /app
+#8 CACHED
+
+#9 [3/7] RUN useradd --create-home --uid 10001 appuser
+#9 CACHED
+
+#10 [4/7] COPY requirements.txt .
+#10 CACHED
+
+#11 [5/7] RUN python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+#11 CACHED
+
+#12 [6/7] COPY . .
+#12 DONE 0.1s
+
+#13 [7/7] RUN mkdir -p /app/instance && chown -R appuser:appuser /app
+#13 DONE 1.2s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 0.2s done
+#14 exporting manifest sha256:7576406fb2cb62a168f925da05ed5d0b2de0811259acc5b2b32b2791885f2fcb 0.0s done
+#14 exporting config sha256:4701a94dbedb3b63ebba83fcb6c20e1f4adde9bec2152c853181a929740b1509 0.0s done
+#14 exporting attestation manifest sha256:b1c6923b8bbf89215034dc8b3d8cd35bd81c48964db487418bbb6c973a27973e 0.1s done
+#14 exporting manifest list sha256:7006bc38e24c76f5612269d48cfb79360520204f6d6a7abd483b109f9629ca70
+#14 exporting manifest list sha256:7006bc38e24c76f5612269d48cfb79360520204f6d6a7abd483b109f9629ca70 0.0s done
+#14 naming to docker.io/library/link_analytics_shlink_global_port_2331-dashboard:latest done
+#14 unpacking to docker.io/library/link_analytics_shlink_global_port_2331-dashboard:latest 0.1s done
+#14 DONE 0.5s
+
+#15 resolving provenance for metadata file
+#15 DONE 0.0s
+ link_analytics_shlink_global_port_2331-dashboard  Built
+ Container link_analytics_shlink_global_port_2331-shlink-db-1  Recreate
+ Container link_analytics_shlink_global_port_2331-shlink-db-1  Recreated
+ Container link_analytics_shlink_global_port_2331-shlink-1  Creating
+ Container link_analytics_shlink_global_port_2331-shlink-1  Created
+ Container link_analytics_shlink_global_port_2331-shlink-db-1  Starting
+ Container link_analytics_shlink_global_port_2331-shlink-db-1  Started
+ Container link_analytics_shlink_global_port_2331-shlink-db-1  Waiting
+ Container link_analytics_shlink_global_port_2331-shlink-db-1  Healthy
+ Container link_analytics_shlink_global_port_2331-shlink-1  Starting
+ Container link_analytics_shlink_global_port_2331-shlink-1  Started
+Checking Shlink...
+shlink-1  |   ERR    er at "shlink-db" (172.19.0.2), port 5432 failed: FATAL:  password authenti
+shlink-1  |   ERR    cation failed for user "shlink"
+shlink-1  |   ERR
+shlink-1  |   ERR
+shlink-1  |   ERR  Exception trace:
+shlink-1  |   ERR    at /etc/shlink/vendor/doctrine/dbal/src/Driver/API/PostgreSQL/ExceptionConverter.php:78
+shlink-1  |   ERR   Doctrine\DBAL\Driver\API\PostgreSQL\ExceptionConverter->convert() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:1460
+shlink-1  |   ERR   Doctrine\DBAL\Connection->handleDriverException() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:1402
+shlink-1  |   ERR   Doctrine\DBAL\Connection->convertException() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:224
+shlink-1  |   ERR   Doctrine\DBAL\Connection->connect() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:241
+shlink-1  |   ERR   Doctrine\DBAL\Connection->getServerVersion() at /etc/shlink/vendor/doctrine/dbal/src/Driver/AbstractPostgreSQLDriver.php:26
+shlink-1  |   ERR   Doctrine\DBAL\Driver\AbstractPostgreSQLDriver->getDatabasePlatform() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:196
+shlink-1  |   ERR   Doctrine\DBAL\Connection->getDatabasePlatform() at /etc/shlink/vendor/doctrine/orm/src/Mapping/ClassMetadataFactory.php:740
+shlink-1  |   ERR   Doctrine\ORM\Mapping\ClassMetadataFactory->getTargetPlatform() at /etc/shlink/vendor/doctrine/orm/src/Mapping/ClassMetadataFactory.php:558
+shlink-1  |   ERR   Doctrine\ORM\Mapping\ClassMetadataFactory->completeIdGeneratorMapping() at /etc/shlink/vendor/doctrine/orm/src/Mapping/ClassMetadataFactory.php:178
+shlink-1  |   ERR   Doctrine\ORM\Mapping\ClassMetadataFactory->doLoadMetadata() at /etc/shlink/vendor/doctrine/persistence/src/Mapping/AbstractClassMetadataFactory.php:343
+shlink-1  |   ERR   Doctrine\Persistence\Mapping\AbstractClassMetadataFactory->loadMetadata() at /etc/shlink/vendor/doctrine/persistence/src/Mapping/AbstractClassMetadataFactory.php:207
+shlink-1  |   ERR   Doctrine\Persistence\Mapping\AbstractClassMetadataFactory->getMetadataFor() at /etc/shlink/vendor/doctrine/orm/src/EntityManager.php:224
+shlink-1  |   ERR   Doctrine\ORM\EntityManager->getClassMetadata() at /etc/shlink/vendor/doctrine/orm/src/Decorator/EntityManagerDecorator.php:52
+shlink-1  |   ERR   Doctrine\ORM\Decorator\EntityManagerDecorator->getClassMetadata() at /etc/shlink/vendor/shlinkio/shlink-common/src/Doctrine/EntityRepositoryFactory.php:33
+shlink-1  |   ERR   Shlinkio\Shlink\Common\Doctrine\EntityRepositoryFactory::__callStatic() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:630
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->doCreate() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:248
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->get() at n/a:n/a
+shlink-1  |   ERR   array_map() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/AbstractFactory/ConfigAbstractFactory.php:76
+shlink-1  |   ERR   Laminas\ServiceManager\AbstractFactory\ConfigAbstractFactory->__invoke() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:630
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->doCreate() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:248
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->get() at n/a:n/a
+shlink-1  |   ERR   array_map() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/AbstractFactory/ConfigAbstractFactory.php:76
+shlink-1  |   ERR   Laminas\ServiceManager\AbstractFactory\ConfigAbstractFactory->__invoke() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:630
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->doCreate() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:248
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->get() at /etc/shlink/vendor/symfony/console/CommandLoader/ContainerCommandLoader.php:40
+shlink-1  |   ERR   Symfony\Component\Console\CommandLoader\ContainerCommandLoader->get() at /etc/shlink/vendor/symfony/console/Application.php:664
+shlink-1  |   ERR   Symfony\Component\Console\Application->has() at /etc/shlink/vendor/symfony/console/Application.php:751
+shlink-1  |   ERR   Symfony\Component\Console\Application->find() at /etc/shlink/vendor/symfony/console/Application.php:321
+shlink-1  |   ERR   Symfony\Component\Console\Application->doRun() at /etc/shlink/vendor/symfony/console/Application.php:218
+shlink-1  |   ERR   Symfony\Component\Console\Application->run() at /etc/shlink/bin/cli:10
+shlink-1  |   ERR
+shlink-1  |   ERR  In Exception.php line 24:
+shlink-1  |   ERR
+shlink-1  |   ERR    [Doctrine\DBAL\Driver\PDO\Exception (7)]
+shlink-1  |   ERR    SQLSTATE[08006] [7] connection to server at "shlink-db" (172.19.0.2), port
+shlink-1  |   ERR    5432 failed: FATAL:  password authentication failed for user "shlink"
+shlink-1  |   ERR
+shlink-1  |   ERR
+shlink-1  |   ERR  Exception trace:
+shlink-1  |   ERR    at /etc/shlink/vendor/doctrine/dbal/src/Driver/PDO/Exception.php:24
+shlink-1  |   ERR   Doctrine\DBAL\Driver\PDO\Exception::new() at /etc/shlink/vendor/doctrine/dbal/src/Driver/PDO/PgSQL/Driver.php:55
+shlink-1  |   ERR   Doctrine\DBAL\Driver\PDO\PgSQL\Driver->connect() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:222
+shlink-1  |   ERR   Doctrine\DBAL\Connection->connect() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:241
+shlink-1  |   ERR   Doctrine\DBAL\Connection->getServerVersion() at /etc/shlink/vendor/doctrine/dbal/src/Driver/AbstractPostgreSQLDriver.php:26
+shlink-1  |   ERR   Doctrine\DBAL\Driver\AbstractPostgreSQLDriver->getDatabasePlatform() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:196
+shlink-1  |   ERR   Doctrine\DBAL\Connection->getDatabasePlatform() at /etc/shlink/vendor/doctrine/orm/src/Mapping/ClassMetadataFactory.php:740
+shlink-1  |   ERR   Doctrine\ORM\Mapping\ClassMetadataFactory->getTargetPlatform() at /etc/shlink/vendor/doctrine/orm/src/Mapping/ClassMetadataFactory.php:558
+shlink-1  |   ERR   Doctrine\ORM\Mapping\ClassMetadataFactory->completeIdGeneratorMapping() at /etc/shlink/vendor/doctrine/orm/src/Mapping/ClassMetadataFactory.php:178
+shlink-1  |   ERR   Doctrine\ORM\Mapping\ClassMetadataFactory->doLoadMetadata() at /etc/shlink/vendor/doctrine/persistence/src/Mapping/AbstractClassMetadataFactory.php:343
+shlink-1  |   ERR   Doctrine\Persistence\Mapping\AbstractClassMetadataFactory->loadMetadata() at /etc/shlink/vendor/doctrine/persistence/src/Mapping/AbstractClassMetadataFactory.php:207
+shlink-1  |   ERR   Doctrine\Persistence\Mapping\AbstractClassMetadataFactory->getMetadataFor() at /etc/shlink/vendor/doctrine/orm/src/EntityManager.php:224
+shlink-1  |   ERR   Doctrine\ORM\EntityManager->getClassMetadata() at /etc/shlink/vendor/doctrine/orm/src/Decorator/EntityManagerDecorator.php:52
+shlink-1  |   ERR   Doctrine\ORM\Decorator\EntityManagerDecorator->getClassMetadata() at /etc/shlink/vendor/shlinkio/shlink-common/src/Doctrine/EntityRepositoryFactory.php:33
+shlink-1  |   ERR   Shlinkio\Shlink\Common\Doctrine\EntityRepositoryFactory::__callStatic() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:630
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->doCreate() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:248
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->get() at n/a:n/a
+shlink-1  |   ERR   array_map() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/AbstractFactory/ConfigAbstractFactory.php:76
+shlink-1  |   ERR   Laminas\ServiceManager\AbstractFactory\ConfigAbstractFactory->__invoke() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:630
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->doCreate() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:248
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->get() at n/a:n/a
+shlink-1  |   ERR   array_map() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/AbstractFactory/ConfigAbstractFactory.php:76
+shlink-1  |   ERR   Laminas\ServiceManager\AbstractFactory\ConfigAbstractFactory->__invoke() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:630
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->doCreate() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:248
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->get() at /etc/shlink/vendor/symfony/console/CommandLoader/ContainerCommandLoader.php:40
+shlink-1  |   ERR   Symfony\Component\Console\CommandLoader\ContainerCommandLoader->get() at /etc/shlink/vendor/symfony/console/Application.php:664
+shlink-1  |   ERR   Symfony\Component\Console\Application->has() at /etc/shlink/vendor/symfony/console/Application.php:751
+shlink-1  |   ERR   Symfony\Component\Console\Application->find() at /etc/shlink/vendor/symfony/console/Application.php:321
+shlink-1  |   ERR   Symfony\Component\Console\Application->doRun() at /etc/shlink/vendor/symfony/console/Application.php:218
+shlink-1  |   ERR   Symfony\Component\Console\Application->run() at /etc/shlink/bin/cli:10
+shlink-1  |   ERR
+shlink-1  |   ERR  In PDOConnect.php line 28:
+shlink-1  |   ERR
+shlink-1  |   ERR    [PDOException (7)]
+shlink-1  |   ERR    SQLSTATE[08006] [7] connection to server at "shlink-db" (172.19.0.2), port
+shlink-1  |   ERR    5432 failed: FATAL:  password authentication failed for user "shlink"
+shlink-1  |   ERR
+shlink-1  |   ERR
+shlink-1  |   ERR  Exception trace:
+shlink-1  |   ERR    at /etc/shlink/vendor/doctrine/dbal/src/Driver/PDO/PDOConnect.php:28
+shlink-1  |   ERR   PDO::connect() at /etc/shlink/vendor/doctrine/dbal/src/Driver/PDO/PDOConnect.php:28
+shlink-1  |   ERR   Doctrine\DBAL\Driver\PDO\PgSQL\Driver->doConnect() at /etc/shlink/vendor/doctrine/dbal/src/Driver/PDO/PgSQL/Driver.php:48
+shlink-1  |   ERR   Doctrine\DBAL\Driver\PDO\PgSQL\Driver->connect() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:222
+shlink-1  |   ERR   Doctrine\DBAL\Connection->connect() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:241
+shlink-1  |   ERR   Doctrine\DBAL\Connection->getServerVersion() at /etc/shlink/vendor/doctrine/dbal/src/Driver/AbstractPostgreSQLDriver.php:26
+shlink-1  |   ERR   Doctrine\DBAL\Driver\AbstractPostgreSQLDriver->getDatabasePlatform() at /etc/shlink/vendor/doctrine/dbal/src/Connection.php:196
+shlink-1  |   ERR   Doctrine\DBAL\Connection->getDatabasePlatform() at /etc/shlink/vendor/doctrine/orm/src/Mapping/ClassMetadataFactory.php:740
+shlink-1  |   ERR   Doctrine\ORM\Mapping\ClassMetadataFactory->getTargetPlatform() at /etc/shlink/vendor/doctrine/orm/src/Mapping/ClassMetadataFactory.php:558
+shlink-1  |   ERR   Doctrine\ORM\Mapping\ClassMetadataFactory->completeIdGeneratorMapping() at /etc/shlink/vendor/doctrine/orm/src/Mapping/ClassMetadataFactory.php:178
+shlink-1  |   ERR   Doctrine\ORM\Mapping\ClassMetadataFactory->doLoadMetadata() at /etc/shlink/vendor/doctrine/persistence/src/Mapping/AbstractClassMetadataFactory.php:343
+shlink-1  |   ERR   Doctrine\Persistence\Mapping\AbstractClassMetadataFactory->loadMetadata() at /etc/shlink/vendor/doctrine/persistence/src/Mapping/AbstractClassMetadataFactory.php:207
+shlink-1  |   ERR   Doctrine\Persistence\Mapping\AbstractClassMetadataFactory->getMetadataFor() at /etc/shlink/vendor/doctrine/orm/src/EntityManager.php:224
+shlink-1  |   ERR   Doctrine\ORM\EntityManager->getClassMetadata() at /etc/shlink/vendor/doctrine/orm/src/Decorator/EntityManagerDecorator.php:52
+shlink-1  |   ERR   Doctrine\ORM\Decorator\EntityManagerDecorator->getClassMetadata() at /etc/shlink/vendor/shlinkio/shlink-common/src/Doctrine/EntityRepositoryFactory.php:33
+shlink-1  |   ERR   Shlinkio\Shlink\Common\Doctrine\EntityRepositoryFactory::__callStatic() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:630
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->doCreate() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:248
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->get() at n/a:n/a
+shlink-1  |   ERR   array_map() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/AbstractFactory/ConfigAbstractFactory.php:76
+shlink-1  |   ERR   Laminas\ServiceManager\AbstractFactory\ConfigAbstractFactory->__invoke() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:630
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->doCreate() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:248
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->get() at n/a:n/a
+shlink-1  |   ERR   array_map() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/AbstractFactory/ConfigAbstractFactory.php:76
+shlink-1  |   ERR   Laminas\ServiceManager\AbstractFactory\ConfigAbstractFactory->__invoke() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:630
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->doCreate() at /etc/shlink/vendor/laminas/laminas-servicemanager/src/ServiceManager.php:248
+shlink-1  |   ERR   Laminas\ServiceManager\ServiceManager->get() at /etc/shlink/vendor/symfony/console/CommandLoader/ContainerCommandLoader.php:40
+shlink-1  |   ERR   Symfony\Component\Console\CommandLoader\ContainerCommandLoader->get() at /etc/shlink/vendor/symfony/console/Application.php:664
+shlink-1  |   ERR   Symfony\Component\Console\Application->has() at /etc/shlink/vendor/symfony/console/Application.php:751
+shlink-1  |   ERR   Symfony\Component\Console\Application->find() at /etc/shlink/vendor/symfony/console/Application.php:321
+shlink-1  |   ERR   Symfony\Component\Console\Application->doRun() at /etc/shlink/vendor/symfony/console/Application.php:218
+shlink-1  |   ERR   Symfony\Component\Console\Application->run() at /etc/shlink/bin/cli:10
+shlink-1  |   ERR
+shlink-1  |   ERR
+shlink-1  |   RES  7 Command did not run successfully
+shlink-1  |  Warning!
+shlink-1  |
+Shlink could not authenticate to PostgreSQL. This usually means an old Docker volume has a different password. Because
+first setup has not completed, run: .\start_windows.ps1 -ResetData
+At D:\LinkAnalytics\Link_Analytics_Shlink_Global_Port_2331\start_windows.ps1:172 char:9
++         throw "Shlink could not authenticate to PostgreSQL. This usua ...
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (Shlink could no....ps1 -ResetData:String) [], RuntimeException
+    + FullyQualifiedErrorId : Shlink could not authenticate to PostgreSQL. This usually means an old Docker volume has
+    a different password. Because first setup has not completed, run: .\start_windows.ps1 -ResetData

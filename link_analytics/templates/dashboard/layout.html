@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">LA</span><span>{{ app_name }}</span></a>
+      <button class="icon-button sidebar-close" type="button" data-sidebar-close aria-label="Close navigation">×</button>
+    </div>
+    <nav class="sidebar-nav" aria-label="Dashboard navigation">
+      <a class="{{ 'active' if active_page == 'dashboard' }}" href="{{ url_for('dashboard') }}"><span>⌂</span><b>Overview</b></a>
+      <a class="{{ 'active' if active_page == 'links' }}" href="{{ url_for('links') }}"><span>↗</span><b>Links</b></a>
+      {% if current_user.is_admin %}<a class="{{ 'active' if active_page == 'users' }}" href="{{ url_for('users') }}"><span>▦</span><b>Users</b></a>{% endif %}
+      <a class="{{ 'active' if active_page == 'settings' }}" href="{{ url_for('integration_status') }}"><span>◎</span><b>Integration</b></a>
+      <a class="{{ 'active' if active_page == 'security' }}" href="{{ url_for('change_password') }}"><span>⚿</span><b>Security</b></a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="account-chip"><span>{{ current_user.display_name[:1]|upper }}</span><div><strong>{{ current_user.display_name }}</strong><small>{{ current_user.role|title }}</small></div></div>
+      <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="signout-button" type="submit">Sign out</button></form>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" data-sidebar-close></div>
+  <main class="dashboard-main" id="main-content">
+    <header class="dashboard-topbar">
+      <div class="topbar-left"><button class="icon-button menu-button" type="button" data-sidebar-open aria-label="Open navigation">☰</button><div><small>{% block breadcrumb %}Workspace{% endblock %}</small><strong>{% block topbar %}Overview{% endblock %}</strong></div></div>
+      <div class="topbar-actions">
+        <button class="theme-button" type="button" data-theme-toggle aria-label="Change theme"><span data-theme-icon>◐</span><span class="theme-label" data-theme-label>Theme</span></button>
+        {% if current_user.can_edit %}<a class="button button-primary button-compact" href="{{ url_for('create_link') }}">+ New link</a>{% endif %}
+      </div>
+    </header>
+    <div class="dashboard-content">
+      {% include 'partials/flashes.html' %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% endblock %}

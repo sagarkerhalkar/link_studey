@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}{{ app_name }} — Branded links with real intelligence{% endblock %}
+{% block body %}
+<header class="site-header shell">
+  <a class="brand" href="{{ url_for('home') }}" aria-label="Link Analytics home">
+    <span class="brand-mark">LA</span><span>{{ app_name }}</span>
+  </a>
+  <nav class="site-nav" aria-label="Main navigation">
+    <a href="#capabilities">Capabilities</a>
+    <a href="#workflow">Workflow</a>
+    <a href="#trust">Tracking truth</a>
+  </nav>
+  <div class="header-actions">
+    <button class="theme-button" type="button" data-theme-toggle aria-label="Change theme">
+      <span data-theme-icon>◐</span><span class="theme-label" data-theme-label>Theme</span>
+    </button>
+    <a class="button button-primary button-compact" href="{{ url_for('login') }}">Sign in</a>
+  </div>
+</header>
+
+<main id="main-content">
+  <section class="hero shell">
+    <div class="hero-copy reveal">
+      <span class="eyebrow"><i></i> Your domain. Your links. Your analytics.</span>
+      <h1>Short branded links with clear, honest intelligence.</h1>
+      <p class="hero-text">Turn a long URL into <strong>https://{{ short_domain }}/your-tag</strong>, share one link everywhere, and understand the clicks without exposing the shortening engine behind your product.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="{{ url_for('login') }}">Open dashboard</a>
+        <a class="button button-secondary" href="#workflow">See how it works</a>
+      </div>
+      <div class="trust-row" aria-label="Product highlights">
+        <span>Custom domain</span><span>Responsive</span><span>Privacy-aware</span><span>Export-ready</span>
+      </div>
+    </div>
+
+    <div class="hero-visual reveal" data-tilt aria-label="Analytics preview">
+      <div class="visual-grid" aria-hidden="true"></div>
+      <div class="link-orbit orbit-one" aria-hidden="true"></div>
+      <div class="link-orbit orbit-two" aria-hidden="true"></div>
+      <article class="preview-card preview-main">
+        <div class="preview-top"><span class="status-dot"></span><small>Live branded link</small></div>
+        <strong>https://{{ short_domain }}/8hb2kld</strong>
+        <p>One link shared across every channel</p>
+      </article>
+      <article class="preview-card preview-stat stat-one"><small>Human clicks</small><strong data-count="4829">0</strong><span>Tracked redirects</span></article>
+      <article class="preview-card preview-stat stat-two"><small>Top source</small><strong>WhatsApp</strong><span>When signal is available</span></article>
+      <article class="preview-card preview-stat stat-three"><small>Devices</small><strong>Mobile 71%</strong><span>Responsive audience</span></article>
+    </div>
+  </section>
+
+  <section class="metric-strip shell reveal" aria-label="Platform benefits">
+    <article><strong>Fast</strong><span>Shlink redirect engine</span></article>
+    <article><strong>Branded</strong><span>Your short domain</span></article>
+    <article><strong>Controlled</strong><span>Admin and user roles</span></article>
+    <article><strong>Transparent</strong><span>No fake platform guesses</span></article>
+  </section>
+
+  <section id="capabilities" class="section shell">
+    <div class="section-heading reveal">
+      <span class="eyebrow">Commercial capability</span>
+      <h2>Everything needed to create, govern, and understand short links.</h2>
+      <p>Designed for daily use on phones, tablets, laptops, desktop displays, and modern browsers.</p>
+    </div>
+    <div class="feature-grid">
+      <article class="feature-card reveal"><span class="feature-icon">↗</span><h3>Exact custom tag</h3><p>Enter the destination and your tag. The final path remains exactly the tag you selected.</p></article>
+      <article class="feature-card reveal"><span class="feature-icon">◎</span><h3>Visit analytics</h3><p>Review clicks, bots, referrers, devices, browsers, operating systems, countries, and timelines.</p></article>
+      <article class="feature-card reveal"><span class="feature-icon">◈</span><h3>Automatic source signals</h3><p>Use web referrers and in-app browser markers when available; show Unknown / Hidden when platforms conceal them.</p></article>
+      <article class="feature-card reveal"><span class="feature-icon">▦</span><h3>Team access</h3><p>Administrators manage users and passwords. Analysts create links. Viewers read reports.</p></article>
+      <article class="feature-card reveal"><span class="feature-icon">◐</span><h3>True light and dark themes</h3><p>Every surface, chart, form, table, and message follows the chosen theme with accessible contrast.</p></article>
+      <article class="feature-card reveal"><span class="feature-icon">⇩</span><h3>Exports and QR</h3><p>Download visit-level CSV data and a QR code generated from the same branded short link.</p></article>
+    </div>
+  </section>
+
+  <section id="workflow" class="section shell">
+    <div class="workflow-panel reveal">
+      <div class="section-heading left">
+        <span class="eyebrow">Simple workflow</span>
+        <h2>Two fields. One short link. Full reporting.</h2>
+      </div>
+      <div class="workflow-grid">
+        <article><span>01</span><div><h3>Paste destination</h3><p>Add the complete YouTube, website, document, product, or campaign URL.</p></div></article>
+        <article><span>02</span><div><h3>Enter your tag</h3><p>Use a unique value such as <strong>8hb2kld</strong>. Nothing else is added to the path.</p></div></article>
+        <article><span>03</span><div><h3>Share and analyse</h3><p>Use the same branded link everywhere and read the available source and device signals.</p></div></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="trust" class="section shell">
+    <div class="truth-panel reveal">
+      <div><span class="eyebrow">Tracking truth</span><h2>Accurate where evidence exists. Honest where apps hide it.</h2></div>
+      <p>Web browsers cannot read a visitor’s MAC address, and mobile apps may remove referrer information. The dashboard therefore labels sources as confirmed, detected, or unavailable instead of inventing data.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer shell">
+  <div><strong>{{ app_name }}</strong><span>Powered by your domain and a private Shlink engine.</span></div>
+  <nav><a href="{{ url_for('privacy') }}">Privacy</a><a href="{{ url_for('terms') }}">Terms</a><span>© {{ current_year }}</span></nav>
+</footer>
+{% endblock %}

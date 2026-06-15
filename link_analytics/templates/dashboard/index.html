@@ -1,0 +1,18 @@
+{% extends 'dashboard/layout.html' %}
+{% block title %}Overview — {{ app_name }}{% endblock %}{% block topbar %}Overview{% endblock %}
+{% block content %}
+<div data-live-dashboard data-live-url="{{ url_for('dashboard_live') }}"><section class="page-heading"><div><span class="eyebrow">Command centre</span><h1>Link performance at a glance</h1><p>Live totals from the version 4 tracking gateway. Historical data stays separate.</p></div>{% if current_user.can_edit %}<a class="button button-primary" href="{{ url_for('create_link') }}">Create short link</a>{% endif %}</section>
+{% if shlink_error %}<div class="service-alert"><div><strong>Shlink connection unavailable</strong><p>{{ shlink_error }}</p></div><a href="{{ url_for('integration_status') }}">Open integration status</a></div>{% endif %}
+<section class="metric-grid">
+  <article class="metric-card"><span>Total links</span><strong data-dashboard-value="total_links">{{ total_links }}</strong><small>Managed in this dashboard</small></article>
+  <article class="metric-card"><span>Verified clicks</span><strong data-dashboard-value="total_clicks">{{ total_clicks }}</strong><small>Gateway v4.2 verified only</small></article>
+  <article class="metric-card"><span>Human clicks</span><strong data-dashboard-value="human_clicks">{{ human_clicks }}</strong><small>Potential bots excluded</small></article>
+  <article class="metric-card"><span>Bot clicks</span><strong data-dashboard-value="bot_clicks">{{ bot_clicks }}</strong><small>Automated traffic identified</small></article>
+<article class="metric-card"><span>Historical records</span><strong>{{ legacy_clicks }}</strong><small>Excluded from current charts</small></article>
+</section>
+<section class="panel dashboard-panel">
+  <div class="panel-heading"><div><span class="eyebrow">Recent links</span><h2>Latest branded links</h2></div><a class="text-link" href="{{ url_for('links') }}">View all links →</a></div>
+  {% if link_cards %}<div class="link-list">{% for item in link_cards %}<article class="link-row" data-dashboard-link="{{ item.link.id }}"><div class="link-row-main"><span class="link-icon">↗</span><div><a class="short-link" href="{{ item.link.short_url }}" target="_blank" rel="noopener">{{ item.link.short_url }}</a><p>{{ item.link.long_url }}</p></div></div><div class="link-row-stats"><span><strong data-link-value="clicks">{{ item.clicks }}</strong><small>Clicks</small></span><span><strong data-link-value="humans">{{ item.humans }}</strong><small>Human</small></span><a class="button button-secondary button-compact" href="{{ url_for('link_analytics', link_id=item.link.id) }}">Analytics</a></div></article>{% endfor %}</div>{% else %}<div class="empty-state"><span>↗</span><h3>No short links yet</h3><p>Create your first link with a destination URL and your exact tag.</p>{% if current_user.can_edit %}<a class="button button-primary" href="{{ url_for('create_link') }}">Create first link</a>{% endif %}</div>{% endif %}
+</section>
+</div>
+{% endblock %}

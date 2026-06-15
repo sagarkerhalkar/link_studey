@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Unexpected error — {{ app_name }}{% endblock %}
+{% block body %}
+<main class="error-page" id="main-content">
+  <span>500</span>
+  <h1>Something went wrong</h1>
+  <p>The error was recorded. Refresh once or return to the dashboard.</p>
+  {% if request_id %}<p class="muted">Reference: {{ request_id }}</p>{% endif %}
+  <div class="hero-actions"><a class="button button-primary" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('home') }}">Return safely</a></div>
+</main>
+{% endblock %}

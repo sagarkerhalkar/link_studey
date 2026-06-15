@@ -1,0 +1,70 @@
+services:
+  shlink-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: shlink
+      POSTGRES_USER: shlink
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - shlink_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shlink -d shlink"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  shlink:
+    image: shlinkio/shlink:5.1.2
+    restart: unless-stopped
+    depends_on:
+      shlink-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${SHLINK_HOST_PORT:-2332}:8080"
+    environment:
+      DEFAULT_DOMAIN: ${SHLINK_DOMAIN}
+      IS_HTTPS_ENABLED: "true"
+      INITIAL_API_KEY: ${SHLINK_API_KEY}
+      GEOLITE_LICENSE_KEY: ${GEOLITE_LICENSE_KEY:-}
+      DB_DRIVER: postgres
+      DB_NAME: shlink
+      DB_USER: shlink
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: shlink-db
+      DB_PORT: "5432"
+      TIMEZONE: Asia/Kolkata
+      TRUSTED_PROXIES: "2"
+      REDIRECT_STATUS_CODE: "302"
+      AUTO_RESOLVE_TITLES: "true"
+      LOGS_FORMAT: json
+      SHELL_VERBOSITY: "3"
+      DEFAULT_BASE_URL_REDIRECT: https://sagarkerhalkar.com
+      DEFAULT_INVALID_SHORT_URL_REDIRECT: https://sagarkerhalkar.com
+      DEFAULT_REGULAR_404_REDIRECT: https://sagarkerhalkar.com
+
+  dashboard:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - shlink
+    ports:
+      - "2331:2331"
+    environment:
+      APP_NAME: Link Analytics
+      SECRET_KEY: ${SECRET_KEY}
+      SHLINK_API_URL: http://shlink:8080
+      SHLINK_API_KEY: ${SHLINK_API_KEY}
+      SHLINK_DOMAIN: ${SHLINK_DOMAIN}
+      PUBLIC_SHORT_BASE_URL: https://${SHLINK_DOMAIN}
+      SHLINK_VERIFY_TLS: "0"
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-0}
+      TRUST_PROXY: "1"
+      DATABASE_URL: sqlite:////app/instance/dashboard.db
+      AUTO_CREATE_DB: "1"
+    volumes:
+      - dashboard_data:/app/instance
+
+volumes:
+  shlink_postgres:
+  dashboard_data:

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Sign in — {{ app_name }}{% endblock %}
+{% block body_class %}auth-body{% endblock %}
+{% block body %}
+<main id="main-content" class="auth-layout">
+  <section class="auth-showcase">
+    <a class="brand auth-brand" href="{{ url_for('home') }}"><span class="brand-mark">LA</span><span>{{ app_name }}</span></a>
+    <div class="auth-message reveal">
+      <span class="eyebrow">Secure workspace</span>
+      <h1>Your branded links, analytics, and team controls in one place.</h1>
+      <p>Create links like <strong>https://{{ short_domain }}/8hb2kld</strong> and review performance from a responsive dashboard built for every screen size.</p>
+      <div class="auth-points"><span>Role-based access</span><span>Shlink-powered redirects</span><span>Light and dark themes</span></div>
+    </div>
+    <div class="auth-visual" aria-hidden="true"><div class="auth-ring ring-a"></div><div class="auth-ring ring-b"></div><div class="auth-core">↗</div></div>
+  </section>
+  <section class="auth-form-wrap">
+    <div class="auth-toolbar"><button class="theme-button" type="button" data-theme-toggle aria-label="Change theme"><span data-theme-icon>◐</span><span data-theme-label>Theme</span></button></div>
+    <form method="post" class="panel auth-card" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="mobile-only-brand brand"><span class="brand-mark">LA</span><span>{{ app_name }}</span></div>
+      <span class="eyebrow">Welcome back</span>
+      <h2>Sign in</h2>
+      <p class="form-intro">Enter the account created by your administrator.</p>
+      {% include 'partials/flashes.html' %}
+      <div class="field"><label for="{{ form.username.id }}">{{ form.username.label.text }}</label>{{ form.username(autocomplete='username', placeholder='your.username') }}{% for error in form.username.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+      <div class="field"><label for="{{ form.password.id }}">{{ form.password.label.text }}</label>{{ form.password(autocomplete='current-password', placeholder='Enter your password') }}{% for error in form.password.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+      <label class="checkbox-row">{{ form.remember() }}<span>{{ form.remember.label.text }}</span></label>
+      {{ form.submit(class_='button button-primary button-block') }}
+      <small class="form-note">Every user can change their own password after signing in.</small>
+    </form>
+  </section>
+</main>
+{% endblock %}

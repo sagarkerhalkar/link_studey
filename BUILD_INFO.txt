@@ -1,0 +1,21 @@
+Link Analytics
+Build version: 4.2.0
+Release date: 2026-06-15
+Dashboard port: 2331
+Private Shlink port: 2332
+Public routes: analytics.sagarkerhalkar.com -> 2331, s.sagarkerhalkar.com -> 2331
+
+Primary changes:
+- Device calculation now separates browser/app identities from estimated physical devices.
+- Cross-context merging uses a privacy-safe signature plus salted network scope.
+- Existing 4.1 events can use hardware fallback without a schema reset.
+- Global analytics UI redesigned for executive readability.
+- Preview/bot and incomplete requests remain excluded.
+- Live background polling remains active.
+
+Verification:
+- 60 automated tests passed.
+- 88% measured coverage.
+- Ruff, Python compilation and pip check passed.
+- Desktop and 390x844 mobile template/CSS rendered in Chromium; 0px mobile overflow.
+- Physical device/platform acceptance remains required after deployment.
